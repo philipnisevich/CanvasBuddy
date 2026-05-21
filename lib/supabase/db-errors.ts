@@ -21,11 +21,20 @@ export function classifyDbError(
   return "other";
 }
 
-export function dbSetupMessage(issue: DbSetupIssue): string {
+export function dbSetupMessage(
+  issue: DbSetupIssue,
+  table: "canvas" | "gpa" = "canvas"
+): string {
   if (issue === "missing_table") {
+    if (table === "gpa") {
+      return "GPA settings table missing. In Supabase SQL Editor, run supabase/migrations/003_user_gpa_preferences.sql, then refresh and save again.";
+    }
     return "Database table missing. In Supabase SQL Editor, run supabase/migrations/001_user_canvas_credentials.sql, then try again.";
   }
   if (issue === "permission_denied") {
+    if (table === "gpa") {
+      return "GPA table permissions missing. In Supabase SQL Editor, re-run the grant section at the bottom of 003_user_gpa_preferences.sql.";
+    }
     return "Database permissions missing. In Supabase SQL Editor, run supabase/migrations/002_grants.sql, then refresh and try again.";
   }
   return "Database error. Check Supabase logs and try again.";

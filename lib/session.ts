@@ -1,5 +1,6 @@
 import { getIronSession, SessionOptions } from "iron-session";
 import { cookies } from "next/headers";
+import type { GpaPreferences } from "@/lib/gpa-preferences";
 
 export type AuthMethod = "oauth" | "pat";
 
@@ -10,6 +11,9 @@ export interface SessionData {
   refreshToken?: string;
   expiresAt?: number;
   oauthState?: string;
+  /** Fallback when user_gpa_preferences table is unavailable. */
+  gpaPreferencesUserId?: string;
+  gpaPreferences?: GpaPreferences;
 }
 
 export const sessionOptions: SessionOptions = {

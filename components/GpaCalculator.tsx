@@ -1,14 +1,20 @@
 "use client";
 
 import { ChevronDown, ChevronUp } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { CourseGrade } from "@/lib/canvas/types";
 import {
   calculateGpa,
   formatGpa,
-  LEVEL_LABELS,
+  getLevelLabels,
   type CourseLevel,
 } from "@/lib/gpa";
+import {
+  DEFAULT_GPA_PREFERENCES,
+  showWeightedGpa,
+  type GpaPreferences,
+} from "@/lib/gpa-preferences";
+import Link from "next/link";
 
 const LEVEL_STYLES: Record<CourseLevel, string> = {
   standard: "bg-[var(--card-muted)] text-[var(--color-text-muted)]",
@@ -22,8 +28,29 @@ interface GpaCalculatorProps {
 
 export default function GpaCalculator({ grades }: GpaCalculatorProps) {
   const [showBreakdown, setShowBreakdown] = useState(false);
-  const result = useMemo(() => calculateGpa(grades), [grades]);
+  const [prefs, setPrefs] = useState<GpaPreferences>(DEFAULT_GPA_PREFERENCES);
 
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const res = await fetch("/api/settings/gpa");
+      if (!res.ok || cancelled) return;
+      const data = await res.json();
+      if (!cancelled && data.preferences) {
+        setPrefs(data.preferences);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const levelLabels = useMemo(() => getLevelLabels(prefs), [prefs]);
+  const result = useMemo(
+    () => calculateGpa(grades, prefs),
+    [grades, prefs]
+  );
+  const weightedEnabled = showWeightedGpa(prefs);
   const hasGpa = result.coursesIncluded > 0;
 
   return (
@@ -32,24 +59,31 @@ export default function GpaCalculator({ grades }: GpaCalculatorProps) {
         <p className="cb-section-label">Academics</p>
         <h2 className="text-lg font-semibold">GPA estimate</h2>
         <p className="mt-1 text-sm text-[var(--muted)]">
-          Calculated from your Canvas course grades. Each course counts equally;
-          AP/IB and Honors are detected from course names.
+          Calculated from your Canvas course grades using your{" "}
+          <Link href="/settings?tab=gpa" className="cb-link">
+            GPA settings
+          </Link>
+          . AP/IB and Honors are detected from course names.
         </p>
       </div>
 
-      <div className="grid gap-4 p-5 sm:grid-cols-2">
+      <div
+        className={`grid gap-4 p-5 ${weightedEnabled ? "sm:grid-cols-2" : "max-w-sm"}`}
+      >
         <GpaStat
           label="Unweighted GPA"
           value={formatGpa(result.unweighted)}
-          scale="4.0 scale"
+          scale={prefs.usePlusMinus ? "4.0 with +/-" : "4.0 (no +/-)"}
           highlight={hasGpa}
         />
-        <GpaStat
-          label="Weighted GPA"
-          value={formatGpa(result.weighted)}
-          scale="5.0 scale (AP/IB +1, Honors +0.5)"
-          highlight={hasGpa}
-        />
+        {weightedEnabled && (
+          <GpaStat
+            label="Weighted GPA"
+            value={formatGpa(result.weighted)}
+            scale={`Up to ${prefs.maxWeightedGpa.toFixed(1)} scale`}
+            highlight={hasGpa}
+          />
+        )}
       </div>
 
       {!hasGpa && (
@@ -114,11 +148,16 @@ export default function GpaCalculator({ grades }: GpaCalculatorProps) {
                     <span
                       className={`rounded-full px-2 py-0.5 text-[0.65rem] font-semibold uppercase tracking-wide ${LEVEL_STYLES[entry.level]}`}
                     >
-                      {LEVEL_LABELS[entry.level]}
+                      {levelLabels[entry.level]}
                     </span>
                     <span className="tabular-nums font-medium">
-                      {entry.unweightedPoints.toFixed(1)} →{" "}
-                      {entry.weightedPoints.toFixed(1)}
+                      {entry.unweightedPoints.toFixed(1)}
+                      {weightedEnabled && (
+                        <>
+                          {" "}
+                          → {entry.weightedPoints.toFixed(1)}
+                        </>
+                      )}
                     </span>
                   </div>
                 </li>

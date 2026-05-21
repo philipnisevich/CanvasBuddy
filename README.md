@@ -86,7 +86,7 @@ Optional. Enables **Sign in with Canvas** so students can skip pasting tokens.
 
 ## How it works
 
-- **Supabase auth**: Each student signs in with email/password. Canvas tokens are stored per user in `user_canvas_credentials` (protected by row-level security).
+- **Supabase auth**: Each student signs in with email/password. Canvas tokens are stored per user in `user_canvas_credentials` (protected by row-level security). GPA scale and weighting live in `user_gpa_preferences` (run `supabase/migrations/003_user_gpa_preferences.sql` in the SQL editor).
 - **Access token**: Student supplies Canvas URL + personal access token in Settings; server validates via `GET /api/v1/users/self`.
 - **OAuth** (optional): Authorization code flow with refresh tokens when the school configures a developer key.
 - Grades: `GET /api/v1/courses?include[]=total_scores`

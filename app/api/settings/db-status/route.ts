@@ -12,19 +12,24 @@ export async function GET() {
     );
   }
 
-  const { error } = await supabase
-    .from("user_canvas_credentials")
-    .select("user_id")
-    .limit(0);
+  const [canvasRes, gpaRes] = await Promise.all([
+    supabase.from("user_canvas_credentials").select("user_id").limit(0),
+    supabase.from("user_gpa_preferences").select("user_id").limit(0),
+  ]);
 
-  if (error) {
-    const issue = classifyDbError(error.message, error.code);
-    return NextResponse.json({
-      ready: false,
-      issue,
-      message: dbSetupMessage(issue),
-    });
-  }
+  const canvasIssue = canvasRes.error
+    ? classifyDbError(canvasRes.error.message, canvasRes.error.code)
+    : null;
+  const gpaIssue = gpaRes.error
+    ? classifyDbError(gpaRes.error.message, gpaRes.error.code)
+    : null;
 
-  return NextResponse.json({ ready: true });
+  return NextResponse.json({
+    ready: !canvasRes.error,
+    gpaReady: !gpaRes.error,
+    issue: canvasIssue,
+    gpaIssue,
+    message: canvasIssue ? dbSetupMessage(canvasIssue) : undefined,
+    gpaMessage: gpaIssue ? dbSetupMessage(gpaIssue) : undefined,
+  });
 }

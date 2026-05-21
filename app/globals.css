@@ -340,4 +340,9 @@
     background: var(--card-muted);
     color: var(--color-text-muted);
   }
+
+  .cb-settings-nav-item--active {
+    background: var(--accent-soft);
+    border: 2px solid rgb(224 62 38 / 0.25);
+  }
 }
