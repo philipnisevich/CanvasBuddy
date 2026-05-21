@@ -2,6 +2,8 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
+import AppShell, { AppShellCentered } from "@/components/ui/AppShell";
+import OnboardingSteps from "@/components/ui/OnboardingSteps";
 import CanvasCredentialsForm from "@/components/CanvasCredentialsForm";
 import SupabaseSetupBanner from "@/components/SupabaseSetupBanner";
 
@@ -73,95 +75,114 @@ export default function SettingsPage() {
 
   if (state === "loading") {
     return (
-      <main className="mx-auto max-w-lg px-4 py-12">
+      <AppShell subtitle="Loading settings…">
         <div className="animate-pulse space-y-4">
-          <div className="h-8 w-40 rounded bg-slate-200 dark:bg-slate-700" />
-          <div className="h-48 rounded-xl bg-slate-200 dark:bg-slate-700" />
+          <div className="h-8 w-48 rounded bg-[var(--border)]" />
+          <div className="h-64 rounded-[var(--radius)] bg-[var(--border)]" />
         </div>
-      </main>
+      </AppShell>
     );
   }
 
   if (state === "unauthenticated") {
     return (
-      <main className="mx-auto max-w-lg px-4 py-16 text-center">
-        <h1 className="text-2xl font-bold">Settings</h1>
-        <p className="mt-3 text-[var(--muted)]">Sign in to manage your Canvas connection.</p>
-        <Link
-          href="/login"
-          className="mt-6 inline-block rounded-lg bg-[var(--accent)] px-4 py-3 text-sm font-semibold text-white hover:bg-[var(--accent-hover)]"
-        >
-          Sign in
-        </Link>
-      </main>
+      <AppShellCentered>
+        <div className="cb-card p-8 text-center">
+          <h1 className="text-2xl font-semibold">Settings</h1>
+          <p className="cb-prose-muted mt-3">
+            Sign in to manage your Canvas connection.
+          </p>
+          <Link href="/login" className="cb-btn-primary mt-6">
+            Sign in
+          </Link>
+        </div>
+      </AppShellCentered>
     );
   }
 
   return (
-    <main className="mx-auto max-w-lg px-4 py-8">
-      <header className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">Settings</h1>
-          {email && (
-            <p className="text-sm text-[var(--muted)]">Signed in as {email}</p>
-          )}
-        </div>
-        <Link
-          href="/"
-          className="text-sm font-medium text-[var(--accent)] underline"
-        >
-          Back to dashboard
+    <AppShell
+      subtitle={email ? `Signed in as ${email}` : undefined}
+      actions={
+        <Link href="/" className="cb-btn-secondary-nav">
+          Dashboard
         </Link>
-      </header>
-
-      {!dbReady && <SupabaseSetupBanner issue={dbIssue} />}
-
-      <section className="rounded-xl border border-[var(--border)] bg-[var(--card)] px-5 py-5">
-        <h2 className="text-lg font-semibold">Canvas connection</h2>
-        {hasCredentials ? (
-          <p className="mt-2 text-sm text-emerald-700 dark:text-emerald-300">
-            Connected{canvasBaseUrl ? ` to ${canvasBaseUrl}` : ""}. Paste a new
-            token below to update.
-          </p>
-        ) : (
+      }
+    >
+      <div className="mx-auto max-w-2xl">
+        <div className="mb-8">
+          <h1 className="text-2xl font-semibold">Settings</h1>
           <p className="mt-2 text-sm text-[var(--muted)]">
-            Add your school Canvas URL and personal access token to load your
-            dashboard.
+            Step 2 — connect your school Canvas with a personal access token.
           </p>
+        </div>
+
+        <OnboardingSteps current={hasCredentials ? 3 : 2} />
+
+        {!dbReady && (
+          <div className="mt-8">
+            <SupabaseSetupBanner issue={dbIssue} />
+          </div>
         )}
 
-        <div className="mt-4">
-          <CanvasCredentialsForm
-            initialCanvasBaseUrl={canvasBaseUrl}
-            onSuccess={() => {
-              setHasCredentials(true);
-              loadSettings();
-            }}
-          />
-        </div>
+        <section className="cb-card mt-8 overflow-hidden">
+          <div className="border-b border-[var(--border)] bg-[var(--card-muted)] px-6 py-4">
+            <p className="cb-section-label">Connection</p>
+            <h2 className="text-lg font-semibold">Canvas</h2>
+            {hasCredentials ? (
+              <p className="mt-2 flex items-center gap-2 text-sm text-[var(--success)]">
+                <span
+                  className="inline-block h-2 w-2 rounded-full bg-[var(--success)]"
+                  aria-hidden
+                />
+                Connected{canvasBaseUrl ? ` to ${canvasBaseUrl}` : ""}
+              </p>
+            ) : (
+              <p className="mt-2 text-sm text-[var(--muted)]">
+                Add your Canvas URL and token to unlock your dashboard.
+              </p>
+            )}
+          </div>
 
-        {hasCredentials && (
+          <div className="px-6 py-6">
+            <CanvasCredentialsForm
+              initialCanvasBaseUrl={canvasBaseUrl}
+              onSuccess={() => {
+                setHasCredentials(true);
+                loadSettings();
+              }}
+            />
+
+            {hasCredentials && (
+              <div className="mt-6 flex flex-wrap items-center justify-between gap-4 border-t border-[var(--border)] pt-6">
+                <Link href="/" className="cb-btn-primary text-sm">
+                  Go to dashboard
+                </Link>
+                <button
+                  type="button"
+                  onClick={handleDisconnect}
+                  disabled={disconnecting}
+                  className="text-sm font-medium text-[var(--danger)] underline disabled:opacity-60"
+                >
+                  {disconnecting ? "Disconnecting…" : "Disconnect Canvas"}
+                </button>
+              </div>
+            )}
+          </div>
+        </section>
+
+        <section className="cb-card mt-6 px-6 py-5">
+          <p className="cb-section-label">Account</p>
+          <h2 className="text-lg font-semibold">Session</h2>
           <button
             type="button"
-            onClick={handleDisconnect}
-            disabled={disconnecting}
-            className="mt-6 text-sm font-medium text-red-600 underline disabled:opacity-60 dark:text-red-400"
+            onClick={handleLogout}
+            className="cb-btn-secondary mt-4"
           >
-            {disconnecting ? "Disconnecting…" : "Disconnect Canvas"}
+            Sign out
           </button>
-        )}
-      </section>
-
-      <section className="mt-8 rounded-xl border border-[var(--border)] px-5 py-5">
-        <h2 className="text-lg font-semibold">Account</h2>
-        <button
-          type="button"
-          onClick={handleLogout}
-          className="mt-3 rounded-lg border border-[var(--border)] px-4 py-2 text-sm font-medium transition hover:bg-slate-100 dark:hover:bg-slate-800"
-        >
-          Sign out
-        </button>
-      </section>
-    </main>
+        </section>
+      </div>
+    </AppShell>
   );
 }

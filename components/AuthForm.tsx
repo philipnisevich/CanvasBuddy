@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Alert from "@/components/ui/Alert";
 
 type AuthMode = "signin" | "signup";
 
@@ -51,15 +52,49 @@ export default function AuthForm() {
 
   return (
     <form onSubmit={handleSubmit} className="text-left">
+      <div className="mb-6 flex rounded-[var(--radius)] border border-[var(--border)] bg-[var(--card-muted)] p-1">
+        <button
+          type="button"
+          className={`flex-1 rounded-md py-2 text-sm font-medium transition ${
+            mode === "signin"
+              ? "bg-[var(--card)] shadow-sm"
+              : "text-[var(--muted)]"
+          }`}
+          onClick={() => {
+            setMode("signin");
+            setError(null);
+            setMessage(null);
+          }}
+        >
+          Sign in
+        </button>
+        <button
+          type="button"
+          className={`flex-1 rounded-md py-2 text-sm font-medium transition ${
+            mode === "signup"
+              ? "bg-[var(--card)] shadow-sm"
+              : "text-[var(--muted)]"
+          }`}
+          onClick={() => {
+            setMode("signup");
+            setError(null);
+            setMessage(null);
+          }}
+        >
+          Create account
+        </button>
+      </div>
+
       <label className="block text-sm font-medium">
-        Email
+        School email
         <input
           type="email"
           required
           autoComplete="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          className="mt-1 w-full rounded-lg border border-[var(--border)] bg-[var(--card)] px-3 py-2 text-sm"
+          className="cb-input mt-1.5"
+          placeholder="you@school.edu"
         />
       </label>
 
@@ -74,29 +109,23 @@ export default function AuthForm() {
           }
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          className="mt-1 w-full rounded-lg border border-[var(--border)] bg-[var(--card)] px-3 py-2 text-sm"
+          className="cb-input mt-1.5"
+          placeholder={mode === "signup" ? "At least 6 characters" : ""}
         />
       </label>
 
-      {error && (
-        <p
-          role="alert"
-          className="mt-4 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800 dark:border-red-800 dark:bg-red-950/50 dark:text-red-200"
-        >
-          {error}
-        </p>
-      )}
+      {error && <Alert className="mt-4">{error}</Alert>}
 
       {message && (
-        <p className="mt-4 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-900 dark:border-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-200">
+        <Alert variant="success" className="mt-4">
           {message}
-        </p>
+        </Alert>
       )}
 
       <button
         type="submit"
         disabled={submitting}
-        className="mt-4 w-full rounded-lg bg-[var(--accent)] px-4 py-3 text-sm font-semibold text-white transition hover:bg-[var(--accent-hover)] disabled:opacity-60"
+        className="cb-btn-primary mt-6 w-full py-3"
       >
         {submitting
           ? "Please wait…"
@@ -105,39 +134,11 @@ export default function AuthForm() {
             : "Sign in"}
       </button>
 
-      <p className="mt-4 text-center text-sm text-[var(--muted)]">
-        {mode === "signin" ? (
-          <>
-            New here?{" "}
-            <button
-              type="button"
-              className="font-medium text-[var(--accent)] underline"
-              onClick={() => {
-                setMode("signup");
-                setError(null);
-                setMessage(null);
-              }}
-            >
-              Create an account
-            </button>
-          </>
-        ) : (
-          <>
-            Already have an account?{" "}
-            <button
-              type="button"
-              className="font-medium text-[var(--accent)] underline"
-              onClick={() => {
-                setMode("signin");
-                setError(null);
-                setMessage(null);
-              }}
-            >
-              Sign in
-            </button>
-          </>
-        )}
-      </p>
+      {mode === "signin" && (
+        <p className="mt-4 text-center text-xs text-[var(--muted)]">
+          After signing in, connect Canvas in Settings to load your courses.
+        </p>
+      )}
     </form>
   );
 }

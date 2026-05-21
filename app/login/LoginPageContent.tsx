@@ -1,7 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { useSearchParams } from "next/navigation";
+import { AppShellCentered } from "@/components/ui/AppShell";
+import Alert from "@/components/ui/Alert";
+import OnboardingSteps from "@/components/ui/OnboardingSteps";
 import AuthForm from "@/components/AuthForm";
 
 export default function LoginPageContent() {
@@ -16,26 +20,32 @@ export default function LoginPageContent() {
   }, [searchParams]);
 
   return (
-    <main className="mx-auto max-w-md px-4 py-16">
+    <AppShellCentered wide>
       <div className="text-center">
-        <h1 className="text-3xl font-bold tracking-tight">CanvasBuddy</h1>
-        <p className="mt-3 text-[var(--muted)]">
-          Sign in to see your grades, due dates, and assignment assistant.
+        <h1 className="text-3xl font-semibold">Sign in to CanvasBuddy</h1>
+        <p className="cb-prose-muted mx-auto mt-3 max-w-md">
+          Step 1 of 3 — create an account or sign in, then connect Canvas in
+          Settings.
         </p>
       </div>
 
+      <div className="mt-8">
+        <OnboardingSteps current={1} />
+      </div>
+
       {callbackError && (
-        <div
-          role="alert"
-          className="mt-6 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800 dark:border-red-800 dark:bg-red-950/50 dark:text-red-200"
-        >
-          {callbackError}
-        </div>
+        <Alert className="mt-8">{callbackError}</Alert>
       )}
 
-      <div className="mt-10 rounded-xl border border-[var(--border)] bg-[var(--card)] px-5 py-5">
+      <div className="cb-card mt-8 p-6 sm:p-8">
         <AuthForm />
       </div>
-    </main>
+
+      <p className="mt-6 text-center text-sm text-[var(--muted)]">
+        <Link href="/" className="font-medium text-[var(--accent)] hover:underline">
+          ← Back to home
+        </Link>
+      </p>
+    </AppShellCentered>
   );
 }

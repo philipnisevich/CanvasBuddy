@@ -6,8 +6,6 @@ A student dashboard that connects to Canvas and shows:
 - **Assignments and quizzes due tomorrow** across all classes
 - **AI assignment assistant** — ask natural-language questions about due dates and how to approach work (powered by Claude)
 
-You use your **normal school Canvas account** — never an administrator login.
-
 ## For students
 
 1. **Create an account** or sign in at `/login` (email and password via Supabase).
@@ -34,7 +32,7 @@ If your school has set up CanvasBuddy with OAuth, you can use **Sign in with Can
 Optional. Enables **Sign in with Canvas** so students can skip pasting tokens.
 
 1. In Canvas: **Admin → Developer Keys → + Developer Key** (API key).
-2. Set **Redirect URI** to match your deployment, e.g. `http://localhost:3000/api/auth/canvas/callback`.
+2. Set **Redirect URI** to your app’s callback URL, e.g. `https://your-app-domain.com/api/auth/canvas/callback`.
 3. Enable scopes (if your instance uses scoped keys):
    - `url:GET|/api/v1/courses`
    - `url:GET|/api/v1/planner/items`
@@ -45,25 +43,23 @@ Optional. Enables **Sign in with Canvas** so students can skip pasting tokens.
 
 ---
 
-## Local development
+## Setup
 
 1. Create a [Supabase](https://supabase.com) project.
 
 2. In the Supabase SQL editor, run the migration in `supabase/migrations/001_user_canvas_credentials.sql`.
 
-3. In Supabase **Authentication → URL Configuration**, add:
-   - Site URL: `http://localhost:3000`
-   - Redirect URLs: `http://localhost:3000/auth/callback`
+3. In Supabase **Authentication → URL Configuration**, set:
+   - **Site URL** to your deployed app URL (e.g. `https://your-app-domain.com`)
+   - **Redirect URLs** to include your auth callback (e.g. `https://your-app-domain.com/auth/callback`)
 
-4. For **local development**, under **Authentication → Providers → Email**, turn off **Confirm email** so sign-up does not send a message every attempt (avoids Supabase’s built-in email rate limit while testing).
-
-5. Copy environment variables:
+4. Copy environment variables:
 
    ```bash
    cp .env.example .env.local
    ```
 
-6. Set at minimum:
+5. Set at minimum:
 
    ```bash
    SESSION_SECRET=<random-string-at-least-32-characters>
@@ -72,20 +68,21 @@ Optional. Enables **Sign in with Canvas** so students can skip pasting tokens.
    ANTHROPIC_API_KEY=<your-anthropic-api-key>   # optional; assistant only
    ```
 
-7. **Additional** for OAuth sign-in (school hosting):
+6. **Additional** for OAuth sign-in (school hosting):
 
    - `CANVAS_BASE_URL`
    - `CANVAS_CLIENT_ID` / `CANVAS_CLIENT_SECRET`
-   - `CANVAS_REDIRECT_URI`
+   - `CANVAS_REDIRECT_URI` (must match the redirect URI registered in Canvas)
 
-8. Install and run:
+7. Install and run:
 
    ```bash
    npm install
-   npm run dev
+   npm run build
+   npm start
    ```
 
-9. Open [http://localhost:3000](http://localhost:3000), sign in, then add your Canvas token in **Settings**.
+8. Sign in at your app URL, then add your Canvas token in **Settings**.
 
 ## How it works
 

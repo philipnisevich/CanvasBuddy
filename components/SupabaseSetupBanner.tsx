@@ -49,7 +49,7 @@ export default function SupabaseSetupBanner({
   return (
     <div
       role="alert"
-      className="mb-6 rounded-lg border border-amber-300 bg-amber-50 px-4 py-4 text-sm text-amber-950 dark:border-amber-700 dark:bg-amber-950/40 dark:text-amber-100"
+      className="cb-card mb-6 border-[var(--warning)] bg-[var(--warning-soft)] px-4 py-4 text-sm font-medium text-[#854d0e]"
     >
       <p className="font-semibold">
         {showGrants
@@ -81,17 +81,17 @@ export default function SupabaseSetupBanner({
         <li>Refresh this page and save your Canvas token again.</li>
       </ol>
       {!showGrants && (
-        <p className="mt-2 text-xs text-amber-800 dark:text-amber-200">
+        <p className="mt-2 text-xs text-[#854d0e]">
           If you already created the table, run only Step 2 (grants) from{" "}
           <code className="font-mono">002_grants.sql</code>.
         </p>
       )}
-      <pre className="mt-3 max-h-48 overflow-auto rounded border border-amber-200 bg-white p-3 font-mono text-xs dark:border-amber-800 dark:bg-slate-900">
+      <pre className="mt-3 max-h-48 overflow-auto rounded-[var(--radius)] border-[3px] border-[var(--border)] bg-[var(--card)] p-3 font-mono text-xs text-[var(--color-text)]">
         {sql}
       </pre>
       <button
         type="button"
-        className="mt-3 rounded-lg border border-amber-400 px-3 py-1.5 text-xs font-medium hover:bg-amber-100 dark:hover:bg-amber-900/50"
+        className="cb-btn-secondary mt-3 cursor-pointer px-3 py-1.5 text-xs"
         onClick={() => navigator.clipboard.writeText(sql)}
       >
         Copy SQL to clipboard

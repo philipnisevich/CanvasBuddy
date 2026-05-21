@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Alert from "@/components/ui/Alert";
 
 interface CanvasCredentialsFormProps {
   initialCanvasBaseUrl?: string;
@@ -56,13 +57,13 @@ export default function CanvasCredentialsForm({
 
   return (
     <form onSubmit={handleSubmit} className="text-left">
-      <p className="mb-4 text-sm text-[var(--muted)]">
-        Use your normal student Canvas login to create a personal access token,
-        then paste it here. Your token is stored securely in your account and
-        only used to call Canvas on your behalf.
+      <p className="text-sm text-[var(--muted)]">
+        Use your normal <strong>student</strong> Canvas account to create a
+        personal access token, then paste it here. Your token stays in your
+        account and is only used to call Canvas on your behalf.
       </p>
 
-      <label className="block text-sm font-medium">
+      <label className="mt-5 block text-sm font-medium">
         Canvas URL
         <input
           type="url"
@@ -70,7 +71,7 @@ export default function CanvasCredentialsForm({
           placeholder="https://yourschool.instructure.com"
           value={canvasBaseUrl}
           onChange={(e) => setCanvasBaseUrl(e.target.value)}
-          className="mt-1 w-full rounded-lg border border-[var(--border)] bg-[var(--card)] px-3 py-2 text-sm"
+          className="cb-input mt-1.5"
         />
       </label>
 
@@ -83,48 +84,41 @@ export default function CanvasCredentialsForm({
           placeholder={
             initialCanvasBaseUrl
               ? "Paste a new token to update"
-              : "Paste token from Canvas settings"
+              : "Paste token from Canvas → Settings"
           }
           value={accessToken}
           onChange={(e) => setAccessToken(e.target.value)}
-          className="mt-1 w-full rounded-lg border border-[var(--border)] bg-[var(--card)] px-3 py-2 font-mono text-sm"
+          className="cb-input mt-1.5 font-mono"
         />
       </label>
 
-      <details className="mt-4 text-sm text-[var(--muted)]">
-        <summary className="cursor-pointer font-medium text-[var(--foreground)]">
+      <details className="mt-5 rounded-[var(--radius)] border border-[var(--border)] bg-[var(--card-muted)] px-4 py-3 text-sm">
+        <summary className="cursor-pointer font-semibold">
           How to get an access token
         </summary>
-        <ol className="mt-2 list-decimal space-y-1 pl-5">
+        <ol className="mt-3 list-decimal space-y-2 pl-5 text-[var(--muted)]">
           <li>Log in to Canvas with your school account.</li>
           <li>
-            Open <strong>Account</strong> → <strong>Settings</strong>.
+            Open <strong className="text-[var(--foreground)]">Account</strong> →{" "}
+            <strong className="text-[var(--foreground)]">Settings</strong>.
           </li>
           <li>
-            Scroll to <strong>Approved Integrations</strong> →{" "}
-            <strong>New Access Token</strong>.
+            Under <strong className="text-[var(--foreground)]">Approved Integrations</strong>, click{" "}
+            <strong className="text-[var(--foreground)]">+ New Access Token</strong>.
           </li>
           <li>
-            Name it (e.g. CanvasBuddy), leave expiry blank or set a date, then
-            generate and copy the token.
+            Name it (e.g. CanvasBuddy), create it, and copy the token immediately.
           </li>
-          <li>Paste the token above (you will not see it again in Canvas).</li>
+          <li>Paste the token above — Canvas won&apos;t show it again.</li>
         </ol>
       </details>
 
-      {error && (
-        <p
-          role="alert"
-          className="mt-4 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800 dark:border-red-800 dark:bg-red-950/50 dark:text-red-200"
-        >
-          {error}
-        </p>
-      )}
+      {error && <Alert className="mt-4">{error}</Alert>}
 
       <button
         type="submit"
         disabled={submitting}
-        className="mt-4 w-full rounded-lg bg-[var(--accent)] px-4 py-3 text-sm font-semibold text-white transition hover:bg-[var(--accent-hover)] disabled:opacity-60"
+        className="cb-btn-primary mt-6 w-full py-3"
       >
         {submitting ? "Saving…" : submitLabel}
       </button>

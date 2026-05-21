@@ -2,8 +2,12 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
+import AppShell, { AppShellCentered } from "@/components/ui/AppShell";
+import Alert from "@/components/ui/Alert";
+import OnboardingSteps from "@/components/ui/OnboardingSteps";
 import LoginButton from "@/components/LoginButton";
 import GradesTable from "@/components/GradesTable";
+import GpaCalculator from "@/components/GpaCalculator";
 import DueTomorrowList from "@/components/DueTomorrowList";
 import AssignmentAssistant from "@/components/AssignmentAssistant";
 import type { DashboardData } from "@/lib/canvas/types";
@@ -14,6 +18,44 @@ type LoadState =
   | "needs_canvas"
   | "error"
   | "ready";
+
+function LoadingSkeleton() {
+  return (
+    <div className="animate-pulse space-y-8">
+      <div className="grid gap-4 sm:grid-cols-3">
+        {[1, 2, 3].map((i) => (
+          <div key={i} className="h-24 rounded-[var(--radius)] bg-[var(--border)]" />
+        ))}
+      </div>
+      <div className="h-64 rounded-[var(--radius)] bg-[var(--border)]" />
+      <div className="h-48 rounded-[var(--radius)] bg-[var(--border)]" />
+    </div>
+  );
+}
+
+function StatCard({
+  label,
+  value,
+  hint,
+}: {
+  label: string;
+  value: string | number;
+  hint?: string;
+}) {
+  return (
+    <div className="cb-card p-5">
+      <p className="cb-section-label">{label}</p>
+      <p className="mt-1 font-[family-name:var(--font-heading)] text-3xl font-bold text-[var(--color-text)]">
+        {value}
+      </p>
+      {hint && (
+        <p className="mt-1 text-xs font-medium text-[var(--color-text-muted)]">
+          {hint}
+        </p>
+      )}
+    </div>
+  );
+}
 
 export default function HomePage() {
   const [state, setState] = useState<LoadState>("loading");
@@ -100,162 +142,203 @@ export default function HomePage() {
     window.location.href = "/login";
   }
 
+  const navActions = (
+    <>
+      <Link href="/settings" className="cb-btn-secondary-nav">
+        Settings
+      </Link>
+      <button
+        type="button"
+        onClick={handleLogout}
+        className="cb-btn-secondary-nav"
+      >
+        Sign out
+      </button>
+    </>
+  );
+
   if (state === "loading") {
     return (
-      <main className="mx-auto max-w-4xl px-4 py-12">
-        <div className="animate-pulse space-y-6">
-          <div className="h-8 w-48 rounded bg-slate-200 dark:bg-slate-700" />
-          <div className="h-40 rounded-xl bg-slate-200 dark:bg-slate-700" />
-          <div className="h-40 rounded-xl bg-slate-200 dark:bg-slate-700" />
-        </div>
-      </main>
+      <AppShell subtitle="Loading your courses…">
+        <LoadingSkeleton />
+      </AppShell>
     );
   }
 
   if (state === "unauthenticated") {
     return (
-      <main className="mx-auto max-w-lg px-4 py-16 text-center">
-        <h1 className="text-3xl font-bold tracking-tight">CanvasBuddy</h1>
-        <p className="mt-3 text-[var(--muted)]">
-          See your current grades and what&apos;s due tomorrow across all your
-          Canvas courses — using your school account, not an administrator
-          login.
-        </p>
+      <AppShellCentered wide>
+        <div className="text-center">
+          <h1 className="text-3xl font-semibold sm:text-4xl">
+            Your Canvas week at a glance
+          </h1>
+          <p className="cb-prose-muted mx-auto mt-4 max-w-xl">
+            See current grades, what&apos;s due tomorrow, and get study help —
+            all from your normal student Canvas account.
+          </p>
+        </div>
+
+        <div className="mt-10">
+          <OnboardingSteps current={1} />
+        </div>
 
         {errorMessage && (
-          <div
-            role="alert"
-            className="mt-6 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800 dark:border-red-800 dark:bg-red-950/50 dark:text-red-200"
-          >
-            {errorMessage}
-          </div>
+          <Alert className="mt-8">{errorMessage}</Alert>
         )}
 
-        <Link
-          href="/login"
-          className="mt-10 inline-block rounded-lg bg-[var(--accent)] px-6 py-3 text-sm font-semibold text-white transition hover:bg-[var(--accent-hover)]"
-        >
-          Sign in
-        </Link>
-      </main>
+        <div className="cb-card mt-10 p-8 text-center">
+          <p className="text-sm font-medium">Ready to get started?</p>
+          <p className="mt-1 text-sm text-[var(--muted)]">
+            It takes about two minutes to set up.
+          </p>
+          <Link href="/login" className="cb-btn-primary mt-6 px-8 py-3">
+            Sign in or create account
+          </Link>
+        </div>
+      </AppShellCentered>
     );
   }
 
   if (state === "needs_canvas") {
     return (
-      <main className="mx-auto max-w-lg px-4 py-16 text-center">
-        <h1 className="text-3xl font-bold tracking-tight">CanvasBuddy</h1>
-        {userEmail && (
-          <p className="mt-2 text-sm text-[var(--muted)]">Signed in as {userEmail}</p>
-        )}
-        <p className="mt-4 text-[var(--muted)]">
-          Connect your Canvas account to load grades and assignments.
-        </p>
+      <AppShellCentered wide>
+        <div className="text-center">
+          <h1 className="text-3xl font-semibold">Almost there</h1>
+          {userEmail && (
+            <p className="mt-2 text-sm text-[var(--muted)]">
+              Signed in as <span className="font-medium">{userEmail}</span>
+            </p>
+          )}
+          <p className="cb-prose-muted mx-auto mt-4 max-w-lg">
+            Connect Canvas so we can load your courses, grades, and planner
+            items.
+          </p>
+        </div>
+
+        <div className="mt-10">
+          <OnboardingSteps current={2} />
+        </div>
 
         {errorMessage && (
-          <div
-            role="alert"
-            className="mt-6 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800 dark:border-red-800 dark:bg-red-950/50 dark:text-red-200"
-          >
-            {errorMessage}
-          </div>
+          <Alert className="mt-8">{errorMessage}</Alert>
         )}
 
-        {oauthEnabled && (
-          <div className="mt-8">
-            <p className="mb-3 text-sm text-[var(--muted)]">
-              Or use school Canvas sign-in if your host configured OAuth:
+        <div className="cb-card mt-10 space-y-6 p-8">
+          <div className="text-center">
+            <p className="text-sm font-semibold">Connect your school Canvas</p>
+            <p className="mt-2 text-sm text-[var(--muted)]">
+              You&apos;ll create a personal access token in Canvas and paste it
+              in Settings. We never ask for an admin account.
             </p>
-            <LoginButton />
           </div>
-        )}
 
-        <Link
-          href="/settings"
-          className="mt-8 inline-block rounded-lg bg-[var(--accent)] px-6 py-3 text-sm font-semibold text-white transition hover:bg-[var(--accent-hover)]"
-        >
-          Add Canvas token in Settings
-        </Link>
+          <Link href="/settings" className="cb-btn-primary mx-auto block w-full max-w-xs">
+            Open Settings to connect
+          </Link>
 
-        <div className="mt-6">
+          {oauthEnabled && (
+            <div className="border-t border-[var(--border)] pt-6 text-center">
+              <p className="text-xs text-[var(--muted)]">
+                Or, if your school enabled OAuth:
+              </p>
+              <div className="mt-3">
+                <LoginButton />
+              </div>
+            </div>
+          )}
+
           <button
             type="button"
             onClick={handleLogout}
-            className="text-sm text-[var(--muted)] underline"
+            className="cb-link mx-auto block cursor-pointer text-sm underline"
           >
             Sign out
           </button>
         </div>
-      </main>
+      </AppShellCentered>
     );
   }
 
-  return (
-    <main className="mx-auto max-w-4xl px-4 py-8">
-      <header className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">CanvasBuddy</h1>
-          {data && (
-            <p className="text-sm text-[var(--muted)]">Hi, {data.user.name}</p>
-          )}
-        </div>
-        <div className="flex flex-wrap gap-2">
-          <Link
-            href="/settings"
-            className="rounded-lg border border-[var(--border)] px-4 py-2 text-sm font-medium transition hover:bg-slate-100 dark:hover:bg-slate-800"
-          >
-            Settings
-          </Link>
-          <button
-            type="button"
-            onClick={handleLogout}
-            className="rounded-lg border border-[var(--border)] px-4 py-2 text-sm font-medium transition hover:bg-slate-100 dark:hover:bg-slate-800"
-          >
-            Sign out
-          </button>
-        </div>
-      </header>
+  const dueCount = data?.dueTomorrow.length ?? 0;
+  const courseCount = data?.grades.length ?? 0;
 
+  return (
+    <AppShell
+      subtitle={data ? `Welcome back, ${data.user.name}` : undefined}
+      actions={navActions}
+    >
       {state === "error" && (
-        <div
-          role="alert"
-          className="mb-6 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800 dark:border-red-800 dark:bg-red-950/50 dark:text-red-200"
-        >
+        <Alert className="mb-8">
           <p>{errorMessage}</p>
           <button
             type="button"
             onClick={loadDashboard}
-            className="mt-2 font-medium underline"
+            className="mt-2 font-semibold underline"
           >
-            Retry
+            Retry loading dashboard
           </button>
-        </div>
+        </Alert>
       )}
 
       {data && (
         <>
-          <section className="mb-10">
-            <AssignmentAssistant />
-          </section>
-
-          <section className="mb-10">
-            <h2 className="mb-4 text-lg font-semibold">Current grades</h2>
-            <GradesTable grades={data.grades} />
-          </section>
-
-          <section>
-            <h2 className="mb-1 text-lg font-semibold">Due tomorrow</h2>
-            <p className="mb-4 text-sm text-[var(--muted)]">
-              Assignments and quizzes due on {data.tomorrowDate} (
-              {data.timezone})
-            </p>
-            <DueTomorrowList
-              items={data.dueTomorrow}
-              tomorrowDate={data.tomorrowDate}
+          <div className="mb-10 grid gap-4 sm:grid-cols-3">
+            <StatCard
+              label="Active courses"
+              value={courseCount}
+              hint="From your Canvas enrollment"
             />
-          </section>
+            <StatCard
+              label="Due tomorrow"
+              value={dueCount}
+              hint={data.tomorrowDate}
+            />
+            <StatCard
+              label="Your timezone"
+              value={data.timezone.split("/").pop()?.replace(/_/g, " ") ?? data.timezone}
+              hint="Used for due-date calculations"
+            />
+          </div>
+
+          <div className="grid gap-10 lg:grid-cols-5 lg:gap-8">
+            <div className="space-y-10 lg:col-span-3">
+              <section>
+                <div className="mb-4 flex flex-wrap items-end justify-between gap-2">
+                  <div>
+                    <p className="cb-section-label">Planner</p>
+                    <h2 className="text-xl font-semibold">Due tomorrow</h2>
+                    <p className="text-sm text-[var(--muted)]">
+                      {data.tomorrowDate} · assignments & quizzes
+                    </p>
+                  </div>
+                </div>
+                <DueTomorrowList
+                  items={data.dueTomorrow}
+                  tomorrowDate={data.tomorrowDate}
+                />
+              </section>
+
+              <section>
+                <div className="mb-4">
+                  <p className="cb-section-label">Progress</p>
+                  <h2 className="text-xl font-semibold">Grades & GPA</h2>
+                </div>
+                <div className="space-y-6">
+                  <GpaCalculator grades={data.grades} />
+                  <GradesTable grades={data.grades} />
+                </div>
+              </section>
+            </div>
+
+            <aside className="lg:col-span-2">
+              <div className="lg:sticky lg:top-6">
+                <p className="cb-section-label mb-4">Study helper</p>
+                <AssignmentAssistant />
+              </div>
+            </aside>
+          </div>
         </>
       )}
-    </main>
+    </AppShell>
   );
 }
