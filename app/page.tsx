@@ -5,6 +5,7 @@ import LoginButton from "@/components/LoginButton";
 import TokenLoginForm from "@/components/TokenLoginForm";
 import GradesTable from "@/components/GradesTable";
 import DueTomorrowList from "@/components/DueTomorrowList";
+import AssignmentAssistant from "@/components/AssignmentAssistant";
 import type { DashboardData } from "@/lib/canvas/types";
 
 type LoadState = "loading" | "unauthenticated" | "error" | "ready";
@@ -172,6 +173,10 @@ export default function HomePage() {
 
       {data && (
         <>
+          <section className="mb-10">
+            <AssignmentAssistant />
+          </section>
+
           <section className="mb-10">
             <h2 className="mb-4 text-lg font-semibold">Current grades</h2>
             <GradesTable grades={data.grades} />

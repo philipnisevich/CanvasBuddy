@@ -4,6 +4,7 @@ A student dashboard that connects to Canvas and shows:
 
 - **Current grades** for all active courses
 - **Assignments and quizzes due tomorrow** across all classes
+- **AI assignment assistant** — ask natural-language questions about due dates and how to approach work (powered by Claude)
 
 You use your **normal school Canvas account** — never an administrator login.
 
@@ -43,6 +44,7 @@ Optional. Enables **Sign in with Canvas** so students skip pasting tokens.
    - `url:GET|/api/v1/courses`
    - `url:GET|/api/v1/planner/items`
    - `url:GET|/api/v1/users/self`
+   - `url:GET|/api/v1/courses/:course_id/assignments` (for the assignment assistant)
 4. Enable the key and copy **Client ID** and **Client Secret**.
 5. Configure environment variables (see below).
 
@@ -62,7 +64,10 @@ Students still never use the admin console — only IT does, once.
 
    ```bash
    SESSION_SECRET=<random-string-at-least-32-characters>
+   ANTHROPIC_API_KEY=<your-anthropic-api-key>
    ```
+
+   Without `ANTHROPIC_API_KEY`, grades and due-tomorrow still work; the assignment assistant will show an error when used.
 
 3. **Additional** for OAuth sign-in (school hosting):
 
@@ -85,6 +90,13 @@ Students still never use the admin console — only IT does, once.
 - **OAuth**: Authorization code flow with refresh tokens when the school configures a developer key.
 - Grades: `GET /api/v1/courses?include[]=total_scores`
 - Due tomorrow: `GET /api/v1/planner/items` for the next calendar day in your timezone
+- Assignment assistant: loads assignments from each active course (including descriptions), sends a summarized snapshot to Claude with the student’s question — your Canvas token never leaves the server except for Canvas API calls
+
+### Example assistant questions
+
+- “When is my chem project due?”
+- “What do I have due tomorrow?”
+- “Look at my English assignment for tomorrow and give me an outline for how to do it.”
 
 ## Scripts
 

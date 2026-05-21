@@ -39,14 +39,44 @@ export interface CanvasUser {
 export interface CanvasAssignment {
   id: number;
   name: string;
+  description?: string | null;
   due_at: string | null;
+  points_possible?: number | null;
+  published?: boolean;
   html_url?: string;
   submission_types?: string[];
   submission?: {
     workflow_state?: string;
     missing?: boolean;
     late?: boolean;
+    submitted_at?: string | null;
   };
+}
+
+export interface AssignmentContextItem {
+  courseId: number;
+  courseName: string;
+  assignmentId: number;
+  title: string;
+  dueAt: string | null;
+  dueAtFormatted: string;
+  dueDateYmd: string | null;
+  pointsPossible: number | null;
+  type: string;
+  htmlUrl: string;
+  missing: boolean;
+  late: boolean;
+  submitted: boolean;
+  description: string | null;
+}
+
+export interface AssignmentAssistantContext {
+  userName: string;
+  timezone: string;
+  todayDate: string;
+  tomorrowDate: string;
+  grades: CourseGrade[];
+  assignments: AssignmentContextItem[];
 }
 
 export interface CanvasPlannerPlannable {
