@@ -1,24 +1,46 @@
 "use client";
 
+import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import LoginButton from "@/components/LoginButton";
-import TokenLoginForm from "@/components/TokenLoginForm";
 import GradesTable from "@/components/GradesTable";
 import DueTomorrowList from "@/components/DueTomorrowList";
 import AssignmentAssistant from "@/components/AssignmentAssistant";
 import type { DashboardData } from "@/lib/canvas/types";
 
-type LoadState = "loading" | "unauthenticated" | "error" | "ready";
+type LoadState =
+  | "loading"
+  | "unauthenticated"
+  | "needs_canvas"
+  | "error"
+  | "ready";
 
 export default function HomePage() {
   const [state, setState] = useState<LoadState>("loading");
   const [data, setData] = useState<DashboardData | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [oauthEnabled, setOauthEnabled] = useState(false);
+  const [userEmail, setUserEmail] = useState<string | null>(null);
 
   const loadDashboard = useCallback(async () => {
     setState("loading");
     setErrorMessage(null);
+
+    const meRes = await fetch("/api/auth/me");
+    if (meRes.status === 401) {
+      setState("unauthenticated");
+      setData(null);
+      return;
+    }
+
+    const me = await meRes.json();
+    setUserEmail(me.user?.email ?? null);
+
+    if (!me.hasCanvasCredentials) {
+      setState("needs_canvas");
+      setData(null);
+      return;
+    }
 
     const timezone =
       Intl.DateTimeFormat().resolvedOptions().timeZone || "America/New_York";
@@ -29,8 +51,11 @@ export default function HomePage() {
       });
 
       if (res.status === 401) {
-        setState("unauthenticated");
+        setState("needs_canvas");
         setData(null);
+        setErrorMessage(
+          "Your Canvas token may have expired. Update it in Settings."
+        );
         return;
       }
 
@@ -64,7 +89,6 @@ export default function HomePage() {
     const oauthError = params.get("error");
     if (oauthError) {
       setErrorMessage(decodeURIComponent(oauthError));
-      setState("unauthenticated");
       window.history.replaceState({}, "", "/");
     }
   }, [loadDashboard]);
@@ -73,6 +97,7 @@ export default function HomePage() {
     await fetch("/api/auth/logout", { method: "POST" });
     setData(null);
     setState("unauthenticated");
+    window.location.href = "/login";
   }
 
   if (state === "loading") {
@@ -89,15 +114,43 @@ export default function HomePage() {
 
   if (state === "unauthenticated") {
     return (
-      <main className="mx-auto max-w-lg px-4 py-16">
-        <div className="text-center">
-          <h1 className="text-3xl font-bold tracking-tight">CanvasBuddy</h1>
-          <p className="mt-3 text-[var(--muted)]">
-            See your current grades and what&apos;s due tomorrow across all your
-            Canvas courses — using your school account, not an administrator
-            login.
-          </p>
-        </div>
+      <main className="mx-auto max-w-lg px-4 py-16 text-center">
+        <h1 className="text-3xl font-bold tracking-tight">CanvasBuddy</h1>
+        <p className="mt-3 text-[var(--muted)]">
+          See your current grades and what&apos;s due tomorrow across all your
+          Canvas courses — using your school account, not an administrator
+          login.
+        </p>
+
+        {errorMessage && (
+          <div
+            role="alert"
+            className="mt-6 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800 dark:border-red-800 dark:bg-red-950/50 dark:text-red-200"
+          >
+            {errorMessage}
+          </div>
+        )}
+
+        <Link
+          href="/login"
+          className="mt-10 inline-block rounded-lg bg-[var(--accent)] px-6 py-3 text-sm font-semibold text-white transition hover:bg-[var(--accent-hover)]"
+        >
+          Sign in
+        </Link>
+      </main>
+    );
+  }
+
+  if (state === "needs_canvas") {
+    return (
+      <main className="mx-auto max-w-lg px-4 py-16 text-center">
+        <h1 className="text-3xl font-bold tracking-tight">CanvasBuddy</h1>
+        {userEmail && (
+          <p className="mt-2 text-sm text-[var(--muted)]">Signed in as {userEmail}</p>
+        )}
+        <p className="mt-4 text-[var(--muted)]">
+          Connect your Canvas account to load grades and assignments.
+        </p>
 
         {errorMessage && (
           <div
@@ -109,29 +162,29 @@ export default function HomePage() {
         )}
 
         {oauthEnabled && (
-          <div className="mt-10 text-center">
-            <h2 className="text-sm font-semibold uppercase tracking-wide text-[var(--muted)]">
-              Option 1 — School sign-in
-            </h2>
-            <p className="mt-2 text-sm text-[var(--muted)]">
-              One click if your school has connected CanvasBuddy.
+          <div className="mt-8">
+            <p className="mb-3 text-sm text-[var(--muted)]">
+              Or use school Canvas sign-in if your host configured OAuth:
             </p>
-            <div className="mt-4">
-              <LoginButton />
-            </div>
+            <LoginButton />
           </div>
         )}
 
-        <div
-          className={`rounded-xl border border-[var(--border)] bg-[var(--card)] px-5 py-5 ${
-            oauthEnabled ? "mt-8" : "mt-10"
-          }`}
+        <Link
+          href="/settings"
+          className="mt-8 inline-block rounded-lg bg-[var(--accent)] px-6 py-3 text-sm font-semibold text-white transition hover:bg-[var(--accent-hover)]"
         >
-          <h2 className="text-center text-sm font-semibold uppercase tracking-wide text-[var(--muted)]">
-            {oauthEnabled ? "Option 2 — " : ""}
-            Connect yourself
-          </h2>
-          <TokenLoginForm onSuccess={loadDashboard} />
+          Add Canvas token in Settings
+        </Link>
+
+        <div className="mt-6">
+          <button
+            type="button"
+            onClick={handleLogout}
+            className="text-sm text-[var(--muted)] underline"
+          >
+            Sign out
+          </button>
         </div>
       </main>
     );
@@ -146,13 +199,21 @@ export default function HomePage() {
             <p className="text-sm text-[var(--muted)]">Hi, {data.user.name}</p>
           )}
         </div>
-        <button
-          type="button"
-          onClick={handleLogout}
-          className="self-start rounded-lg border border-[var(--border)] px-4 py-2 text-sm font-medium transition hover:bg-slate-100 dark:hover:bg-slate-800"
-        >
-          Log out
-        </button>
+        <div className="flex flex-wrap gap-2">
+          <Link
+            href="/settings"
+            className="rounded-lg border border-[var(--border)] px-4 py-2 text-sm font-medium transition hover:bg-slate-100 dark:hover:bg-slate-800"
+          >
+            Settings
+          </Link>
+          <button
+            type="button"
+            onClick={handleLogout}
+            className="rounded-lg border border-[var(--border)] px-4 py-2 text-sm font-medium transition hover:bg-slate-100 dark:hover:bg-slate-800"
+          >
+            Sign out
+          </button>
+        </div>
       </header>
 
       {state === "error" && (

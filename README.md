@@ -10,33 +10,28 @@ You use your **normal school Canvas account** — never an administrator login.
 
 ## For students
 
-You can connect in either way:
+1. **Create an account** or sign in at `/login` (email and password via Supabase).
+2. Open **Settings** and add your school **Canvas URL** and a **personal access token** from Canvas.
+3. Return to the dashboard to see grades, due tomorrow, and the assignment assistant.
 
-### Option A — Connect yourself (no admin setup)
+### Getting a Canvas access token
 
-Works on any Canvas school without IT involvement.
+1. Log in to Canvas with your school account.
+2. Open **Account** → **Settings**.
+3. Under **Approved Integrations**, click **+ New Access Token**.
+4. Name it (e.g. CanvasBuddy), create it, and copy the token into CanvasBuddy Settings.
 
-1. Open CanvasBuddy (e.g. [http://localhost:3000](http://localhost:3000) when running locally).
-2. Under **Connect yourself**, enter your school’s Canvas URL (the address in your browser when you open Canvas, e.g. `https://canvas.university.edu`).
-3. In Canvas, while logged in as yourself:
-   - **Account** → **Settings**
-   - **Approved Integrations** → **+ New Access Token**
-   - Name it (e.g. CanvasBuddy), create it, and copy the token
-4. Paste the token into CanvasBuddy and click **Connect with access token**.
+Revoke the token anytime in Canvas under **Settings → Approved Integrations**.
 
-Your token is stored only in an encrypted session cookie on the server running CanvasBuddy. Revoke it anytime in Canvas under **Settings → Approved Integrations**.
+### Optional — Sign in with Canvas (OAuth)
 
-### Option B — Sign in with Canvas
-
-If your school has set up CanvasBuddy with OAuth, click **Sign in with Canvas** and log in with your usual school credentials (SSO/password — same as Canvas).
-
-You do **not** need access to Admin → Developer Keys.
+If your school has set up CanvasBuddy with OAuth, you can use **Sign in with Canvas** after creating a CanvasBuddy account. Your host must configure developer keys (see below).
 
 ---
 
 ## For schools / hosts (one-time OAuth setup)
 
-Optional. Enables **Sign in with Canvas** so students skip pasting tokens.
+Optional. Enables **Sign in with Canvas** so students can skip pasting tokens.
 
 1. In Canvas: **Admin → Developer Keys → + Developer Key** (API key).
 2. Set **Redirect URI** to match your deployment, e.g. `http://localhost:3000/api/auth/canvas/callback`.
@@ -48,49 +43,58 @@ Optional. Enables **Sign in with Canvas** so students skip pasting tokens.
 4. Enable the key and copy **Client ID** and **Client Secret**.
 5. Configure environment variables (see below).
 
-Students still never use the admin console — only IT does, once.
-
 ---
 
 ## Local development
 
-1. Copy environment variables:
+1. Create a [Supabase](https://supabase.com) project.
+
+2. In the Supabase SQL editor, run the migration in `supabase/migrations/001_user_canvas_credentials.sql`.
+
+3. In Supabase **Authentication → URL Configuration**, add:
+   - Site URL: `http://localhost:3000`
+   - Redirect URLs: `http://localhost:3000/auth/callback`
+
+4. For **local development**, under **Authentication → Providers → Email**, turn off **Confirm email** so sign-up does not send a message every attempt (avoids Supabase’s built-in email rate limit while testing).
+
+5. Copy environment variables:
 
    ```bash
    cp .env.example .env.local
    ```
 
-2. **Minimum** for student token login only:
+6. Set at minimum:
 
    ```bash
    SESSION_SECRET=<random-string-at-least-32-characters>
-   ANTHROPIC_API_KEY=<your-anthropic-api-key>
+   NEXT_PUBLIC_SUPABASE_URL=<your-project-url>
+   NEXT_PUBLIC_SUPABASE_ANON_KEY=<your-anon-key>
+   ANTHROPIC_API_KEY=<your-anthropic-api-key>   # optional; assistant only
    ```
 
-   Without `ANTHROPIC_API_KEY`, grades and due-tomorrow still work; the assignment assistant will show an error when used.
-
-3. **Additional** for OAuth sign-in (school hosting):
+7. **Additional** for OAuth sign-in (school hosting):
 
    - `CANVAS_BASE_URL`
    - `CANVAS_CLIENT_ID` / `CANVAS_CLIENT_SECRET`
    - `CANVAS_REDIRECT_URI`
 
-4. Install and run:
+8. Install and run:
 
    ```bash
    npm install
    npm run dev
    ```
 
-5. Open [http://localhost:3000](http://localhost:3000).
+9. Open [http://localhost:3000](http://localhost:3000), sign in, then add your Canvas token in **Settings**.
 
 ## How it works
 
-- **Access token**: Student supplies Canvas URL + personal access token; server validates via `GET /api/v1/users/self` and stores credentials in an encrypted httpOnly cookie.
-- **OAuth**: Authorization code flow with refresh tokens when the school configures a developer key.
+- **Supabase auth**: Each student signs in with email/password. Canvas tokens are stored per user in `user_canvas_credentials` (protected by row-level security).
+- **Access token**: Student supplies Canvas URL + personal access token in Settings; server validates via `GET /api/v1/users/self`.
+- **OAuth** (optional): Authorization code flow with refresh tokens when the school configures a developer key.
 - Grades: `GET /api/v1/courses?include[]=total_scores`
 - Due tomorrow: `GET /api/v1/planner/items` for the next calendar day in your timezone
-- Assignment assistant: loads assignments from each active course (including descriptions), sends a summarized snapshot to Claude with the student’s question — your Canvas token never leaves the server except for Canvas API calls
+- Assignment assistant: loads assignments from each active course, sends a summarized snapshot to Claude — your Canvas token never leaves the server except for Canvas API calls
 
 ### Example assistant questions
 

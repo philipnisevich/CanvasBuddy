@@ -1,19 +1,38 @@
 import { NextRequest, NextResponse } from "next/server";
 import { savePatToSession } from "@/lib/auth";
+import {
+  deleteCanvasCredentials,
+  getCanvasCredentials,
+} from "@/lib/canvas-credentials";
 import { verifyCanvasToken, CanvasApiError } from "@/lib/canvas/client";
 import { getSupabaseUser } from "@/lib/supabase/auth";
-import { normalizeCanvasBaseUrl } from "@/lib/session";
+import { normalizeCanvasBaseUrl, getSession } from "@/lib/session";
+import { classifyDbError, dbSetupMessage } from "@/lib/supabase/db-errors";
 
-/** @deprecated Prefer POST /api/settings/canvas after signing in. */
+export async function GET() {
+  const { supabase, user } = await getSupabaseUser();
+
+  if (!user) {
+    return NextResponse.json(
+      { error: "unauthorized", message: "Sign in required." },
+      { status: 401 }
+    );
+  }
+
+  const creds = await getCanvasCredentials(supabase, user.id);
+
+  return NextResponse.json({
+    hasCredentials: !!creds,
+    canvasBaseUrl: creds?.canvas_base_url ?? null,
+  });
+}
+
 export async function POST(request: NextRequest) {
   const { user } = await getSupabaseUser();
 
   if (!user) {
     return NextResponse.json(
-      {
-        error: "unauthorized",
-        message: "Sign in first, then add your Canvas token in Settings.",
-      },
+      { error: "unauthorized", message: "Sign in required." },
       { status: 401 }
     );
   }
@@ -76,7 +95,45 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  await savePatToSession(baseUrl, token);
+  try {
+    await savePatToSession(baseUrl, token);
+  } catch (err) {
+    const rawMessage =
+      err instanceof Error ? err.message : "Failed to save credentials.";
+    const issue = classifyDbError(rawMessage);
+    if (issue === "missing_table" || issue === "permission_denied") {
+      return NextResponse.json(
+        {
+          error: issue === "missing_table" ? "db_not_setup" : "db_permission",
+          message: dbSetupMessage(issue),
+        },
+        { status: 503 }
+      );
+    }
+
+    return NextResponse.json(
+      { error: "save_failed", message: rawMessage },
+      { status: 500 }
+    );
+  }
+
+  return NextResponse.json({ ok: true, canvasBaseUrl: baseUrl });
+}
+
+export async function DELETE() {
+  const { supabase, user } = await getSupabaseUser();
+
+  if (!user) {
+    return NextResponse.json(
+      { error: "unauthorized", message: "Sign in required." },
+      { status: 401 }
+    );
+  }
+
+  await deleteCanvasCredentials(supabase, user.id);
+
+  const session = await getSession();
+  session.destroy();
 
   return NextResponse.json({ ok: true });
 }

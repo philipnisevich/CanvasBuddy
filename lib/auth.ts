@@ -1,5 +1,12 @@
 import { refreshAccessToken, tokenExpiresAt } from "@/lib/canvas/oauth";
 import {
+  getCanvasCredentials,
+  getValidAccessTokenFromCredentials,
+  saveCanvasCredentials,
+  deleteCanvasCredentials,
+} from "@/lib/canvas-credentials";
+import { getSupabaseUser } from "@/lib/supabase/auth";
+import {
   getSession,
   getCanvasBaseUrlFromSession,
   getEnvCanvasBaseUrl,
@@ -13,6 +20,23 @@ export interface CanvasContext {
 }
 
 export async function getCanvasContext(): Promise<CanvasContext | null> {
+  const { supabase, user } = await getSupabaseUser();
+
+  if (user) {
+    const creds = await getCanvasCredentials(supabase, user.id);
+    if (!creds) {
+      return null;
+    }
+    const accessToken = await getValidAccessTokenFromCredentials(
+      supabase,
+      creds
+    );
+    if (!accessToken) {
+      return null;
+    }
+    return { baseUrl: creds.canvas_base_url, accessToken };
+  }
+
   const session = await getSession();
   const baseUrl = getCanvasBaseUrlFromSession(session);
   if (!baseUrl || !session.accessToken) {
@@ -72,13 +96,26 @@ export async function saveOAuthTokensToSession(tokens: {
   refresh_token?: string;
   expires_in?: number;
 }): Promise<void> {
-  const session = await getSession();
   const baseUrl = getEnvCanvasBaseUrl();
+  const expiresAt = tokenExpiresAt(tokens.expires_in);
+
+  const { supabase, user } = await getSupabaseUser();
+  if (user && baseUrl) {
+    await saveCanvasCredentials(supabase, user.id, {
+      canvasBaseUrl: baseUrl,
+      accessToken: tokens.access_token,
+      authMethod: "oauth",
+      refreshToken: tokens.refresh_token,
+      expiresAt,
+    });
+  }
+
+  const session = await getSession();
   session.authMethod = "oauth";
   session.canvasBaseUrl = baseUrl ?? undefined;
   session.accessToken = tokens.access_token;
   session.refreshToken = tokens.refresh_token;
-  session.expiresAt = tokenExpiresAt(tokens.expires_in);
+  session.expiresAt = expiresAt;
   await session.save();
 }
 
@@ -86,6 +123,15 @@ export async function savePatToSession(
   canvasBaseUrl: string,
   accessToken: string
 ): Promise<void> {
+  const { supabase, user } = await getSupabaseUser();
+  if (user) {
+    await saveCanvasCredentials(supabase, user.id, {
+      canvasBaseUrl,
+      accessToken,
+      authMethod: "pat",
+    });
+  }
+
   const session = await getSession();
   session.authMethod = "pat";
   session.canvasBaseUrl = canvasBaseUrl;
@@ -110,6 +156,11 @@ export function generateOAuthState(): string {
 }
 
 export async function clearSessionOnUnauthorized(): Promise<void> {
+  const { supabase, user } = await getSupabaseUser();
+  if (user) {
+    await deleteCanvasCredentials(supabase, user.id);
+  }
+
   const session = await getSession();
   session.destroy();
 }

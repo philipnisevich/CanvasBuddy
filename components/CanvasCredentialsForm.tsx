@@ -2,12 +2,18 @@
 
 import { useState } from "react";
 
-interface TokenLoginFormProps {
-  onSuccess: () => void;
+interface CanvasCredentialsFormProps {
+  initialCanvasBaseUrl?: string;
+  onSuccess?: () => void;
+  submitLabel?: string;
 }
 
-export default function TokenLoginForm({ onSuccess }: TokenLoginFormProps) {
-  const [canvasBaseUrl, setCanvasBaseUrl] = useState("");
+export default function CanvasCredentialsForm({
+  initialCanvasBaseUrl = "",
+  onSuccess,
+  submitLabel = "Save Canvas connection",
+}: CanvasCredentialsFormProps) {
+  const [canvasBaseUrl, setCanvasBaseUrl] = useState(initialCanvasBaseUrl);
   const [accessToken, setAccessToken] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -24,14 +30,23 @@ export default function TokenLoginForm({ onSuccess }: TokenLoginFormProps) {
         body: JSON.stringify({ canvasBaseUrl, accessToken }),
       });
 
-      const body = await res.json();
+      let body: { message?: string; ok?: boolean } = {};
+      const text = await res.text();
+      if (text) {
+        try {
+          body = JSON.parse(text) as { message?: string; ok?: boolean };
+        } catch {
+          body = { message: "Unexpected server response. Try again." };
+        }
+      }
 
       if (!res.ok) {
         setError(body.message ?? "Could not connect to Canvas.");
         return;
       }
 
-      onSuccess();
+      setAccessToken("");
+      onSuccess?.();
     } catch {
       setError("Network error. Please try again.");
     } finally {
@@ -40,10 +55,11 @@ export default function TokenLoginForm({ onSuccess }: TokenLoginFormProps) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="mt-6 text-left">
+    <form onSubmit={handleSubmit} className="text-left">
       <p className="mb-4 text-sm text-[var(--muted)]">
-        No administrator access needed. Use your normal student Canvas login to
-        create a token, then paste it here.
+        Use your normal student Canvas login to create a personal access token,
+        then paste it here. Your token is stored securely in your account and
+        only used to call Canvas on your behalf.
       </p>
 
       <label className="block text-sm font-medium">
@@ -64,10 +80,14 @@ export default function TokenLoginForm({ onSuccess }: TokenLoginFormProps) {
           type="password"
           required
           autoComplete="off"
-          placeholder="Paste token from Canvas settings"
+          placeholder={
+            initialCanvasBaseUrl
+              ? "Paste a new token to update"
+              : "Paste token from Canvas settings"
+          }
           value={accessToken}
           onChange={(e) => setAccessToken(e.target.value)}
-          className="mt-1 w-full rounded-lg border border-[var(--border)] bg-[var(--card)] px-3 py-2 text-sm font-mono"
+          className="mt-1 w-full rounded-lg border border-[var(--border)] bg-[var(--card)] px-3 py-2 font-mono text-sm"
         />
       </label>
 
@@ -106,7 +126,7 @@ export default function TokenLoginForm({ onSuccess }: TokenLoginFormProps) {
         disabled={submitting}
         className="mt-4 w-full rounded-lg bg-[var(--accent)] px-4 py-3 text-sm font-semibold text-white transition hover:bg-[var(--accent-hover)] disabled:opacity-60"
       >
-        {submitting ? "Connecting…" : "Connect with access token"}
+        {submitting ? "Saving…" : submitLabel}
       </button>
     </form>
   );

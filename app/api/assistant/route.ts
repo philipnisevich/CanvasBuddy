@@ -26,7 +26,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(
       {
         error: "unauthorized",
-        message: "Please connect with Canvas or your access token.",
+        message: "Add your Canvas token in Settings.",
       },
       { status: 401 }
     );
