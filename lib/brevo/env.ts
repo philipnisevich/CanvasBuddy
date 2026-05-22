@@ -1,3 +1,4 @@
+import { envSetupLocationHint } from "@/lib/env-deploy-hint";
 import { getAsciiEnvVarError } from "@/lib/env-ascii";
 
 export function getBrevoEnvError(): string | null {
@@ -5,7 +6,7 @@ export function getBrevoEnvError(): string | null {
   const senderEmail = process.env.BREVO_SENDER_EMAIL?.trim();
 
   if (!apiKey || !senderEmail) {
-    return "Brevo is not configured. Add BREVO_API_KEY and BREVO_SENDER_EMAIL to .env.local (use a verified sender in Brevo), then restart the dev server.";
+    return `Brevo is not configured. Add BREVO_API_KEY and BREVO_SENDER_EMAIL to ${envSetupLocationHint()} (use a verified sender in Brevo).`;
   }
 
   const apiAscii = getAsciiEnvVarError("BREVO_API_KEY", apiKey);

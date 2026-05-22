@@ -115,6 +115,27 @@ Optional. Enables **Sign in with Canvas** so students can skip pasting tokens.
 
 9. Sign in at your app URL, connect Canvas in **Settings**, then explore **Home** and the other pages.
 
+### Production deployment (e.g. canvasbuddy.ai)
+
+Local `.env.local` is **not** uploaded to your host. Set the same server variables in your platform (Vercel, etc.), then **redeploy**:
+
+| Variable | Required for sign-up |
+|----------|-------------------|
+| `SESSION_SECRET` | Yes |
+| `NEXT_PUBLIC_SUPABASE_URL` | Yes |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Yes |
+| `SUPABASE_SERVICE_ROLE_KEY` | Yes (sign-up confirmation links) |
+| `BREVO_API_KEY` | Yes |
+| `BREVO_SENDER_EMAIL` | Yes |
+
+Check readiness after deploy: `GET https://your-domain.com/api/auth/signup/status` — `ready` should be `true`.
+
+In Supabase **Authentication → URL Configuration**, set **Site URL** and **Redirect URLs** to your production domain (e.g. `https://canvasbuddy.ai/auth/callback`).
+
+Set `NEXT_PUBLIC_SITE_URL=https://canvasbuddy.ai` in Vercel so confirmation emails always use the production domain.
+
+**Local dev:** If you see `Cannot find module './1331.js'` after clicking an email link, stop the dev server, run `npm run clean`, then `npm run dev` again (stale `.next` cache).
+
 ## How it works
 
 ### Auth and stored preferences

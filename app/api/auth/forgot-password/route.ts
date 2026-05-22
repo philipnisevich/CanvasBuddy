@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getRequestOrigin } from "@/lib/app-origin";
 import { buildAuthCallbackUrl } from "@/lib/auth/auth-callback-url";
 import { getSignupEnvError } from "@/lib/auth/signup-env";
 import { sendPasswordRecoveryEmail } from "@/lib/brevo/send-password-recovery";
@@ -25,7 +26,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ message: "Email is required." }, { status: 400 });
   }
 
-  const origin = request.headers.get("origin") ?? new URL(request.url).origin;
+  const origin = getRequestOrigin(request);
   const nextPath = "/settings?tab=account&recovery=1";
 
   try {

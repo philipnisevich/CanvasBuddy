@@ -1,13 +1,21 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getRequestOrigin } from "@/lib/app-origin";
 import { buildAuthCallbackUrl } from "@/lib/auth/auth-callback-url";
-import { getSignupEnvError } from "@/lib/auth/signup-env";
+import {
+  getSignupEnvError,
+  getSignupEnvFailureCode,
+} from "@/lib/auth/signup-env";
 import { sendSignupConfirmationEmail } from "@/lib/brevo/send-signup-confirmation";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 export async function POST(request: NextRequest) {
   const envError = getSignupEnvError();
+  const failureCode = getSignupEnvFailureCode();
   if (envError) {
-    return NextResponse.json({ message: envError }, { status: 503 });
+    return NextResponse.json(
+      { error: failureCode ?? "env_not_configured", message: envError },
+      { status: 503 }
+    );
   }
 
   let body: { email?: string; password?: string; confirmPassword?: string };
@@ -35,7 +43,7 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const origin = request.headers.get("origin") ?? new URL(request.url).origin;
+  const origin = getRequestOrigin(request);
   const redirectTo = `${origin}/auth/callback?next=/settings`;
 
   const admin = createAdminClient();
