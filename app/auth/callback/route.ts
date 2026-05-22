@@ -28,13 +28,13 @@ async function verifyEmailToken(
   supabase: ReturnType<typeof createRouteHandlerClient>,
   tokenHash: string,
   type: EmailOtpType
-): Promise<{ ok: boolean; errorPreview: string | null; branch: string }> {
+): Promise<boolean> {
   const { error } = await supabase.auth.verifyOtp({
     type,
     token_hash: tokenHash,
   });
   if (!error) {
-    return { ok: true, errorPreview: null, branch: `verifyOtp:${type}` };
+    return true;
   }
 
   if (type === "signup") {
@@ -42,21 +42,10 @@ async function verifyEmailToken(
       type: "email",
       token_hash: tokenHash,
     });
-    if (!retry.error) {
-      return { ok: true, errorPreview: null, branch: "verifyOtp:email_fallback" };
-    }
-    return {
-      ok: false,
-      errorPreview: retry.error.message.slice(0, 120),
-      branch: "verifyOtp:signup_and_email_failed",
-    };
+    return !retry.error;
   }
 
-  return {
-    ok: false,
-    errorPreview: error.message.slice(0, 120),
-    branch: `verifyOtp:${type}`,
-  };
+  return false;
 }
 
 export async function GET(request: NextRequest) {
@@ -75,76 +64,20 @@ export async function GET(request: NextRequest) {
     const supabase = createRouteHandlerClient(request, response);
 
     let authOk = false;
-    let authBranch = "none";
-    let authErrorPreview: string | null = null;
 
     if (tokenHash && type) {
-      const result = await verifyEmailToken(supabase, tokenHash, type);
-      authOk = result.ok;
-      authBranch = result.branch;
-      authErrorPreview = result.errorPreview;
+      authOk = await verifyEmailToken(supabase, tokenHash, type);
     } else if (code) {
-      authBranch = "exchangeCode";
       const { error } = await supabase.auth.exchangeCodeForSession(code);
       authOk = !error;
-      authErrorPreview = error?.message?.slice(0, 120) ?? null;
-    } else {
-      authBranch = "missing_params";
-      authErrorPreview = "No token_hash or code in callback URL";
     }
-
-    // #region agent log
-    fetch("http://127.0.0.1:7941/ingest/d44087b2-2238-465d-9653-4421e2f78fdc", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "X-Debug-Session-Id": "4f005d",
-      },
-      body: JSON.stringify({
-        sessionId: "4f005d",
-        hypothesisId: "H3,H4,H5",
-        location: "app/auth/callback/route.ts:GET",
-        message: "auth callback result",
-        data: {
-          authBranch,
-          authOk,
-          authErrorPreview,
-          host: requestUrl.host,
-          typeParam: type ?? null,
-          hasTokenHash: !!tokenHash,
-          hasCode: !!code,
-        },
-        timestamp: Date.now(),
-      }),
-    }).catch(() => {});
-    // #endregion
 
     if (!authOk) {
       return NextResponse.redirect(failUrl);
     }
 
     return response;
-  } catch (err) {
-    // #region agent log
-    fetch("http://127.0.0.1:7941/ingest/d44087b2-2238-465d-9653-4421e2f78fdc", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "X-Debug-Session-Id": "4f005d",
-      },
-      body: JSON.stringify({
-        sessionId: "4f005d",
-        hypothesisId: "H6",
-        location: "app/auth/callback/route.ts:GET:catch",
-        message: "auth callback exception",
-        data: {
-          errorPreview:
-            err instanceof Error ? err.message.slice(0, 120) : "unknown",
-        },
-        timestamp: Date.now(),
-      }),
-    }).catch(() => {});
-    // #endregion
+  } catch {
     return NextResponse.redirect(failUrl);
   }
 }
