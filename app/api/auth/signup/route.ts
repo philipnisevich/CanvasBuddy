@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getRequestOrigin } from "@/lib/app-origin";
+import { getEmailLinkOrigin } from "@/lib/app-origin";
 import { buildAuthCallbackUrl } from "@/lib/auth/auth-callback-url";
 import {
   getSignupEnvError,
@@ -43,7 +43,7 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const origin = getRequestOrigin(request);
+  const origin = getEmailLinkOrigin(request);
   const redirectTo = `${origin}/auth/callback?next=/settings`;
 
   const admin = createAdminClient();
@@ -89,6 +89,35 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     );
   }
+
+  // #region agent log
+  let confirmationHost = "unknown";
+  try {
+    confirmationHost = new URL(confirmationUrl).host;
+  } catch {
+    /* ignore */
+  }
+  fetch("http://127.0.0.1:7941/ingest/d44087b2-2238-465d-9653-4421e2f78fdc", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "X-Debug-Session-Id": "4f005d",
+    },
+    body: JSON.stringify({
+      sessionId: "4f005d",
+      hypothesisId: "H1,H2",
+      location: "app/api/auth/signup/route.ts:POST",
+      message: "signup confirmation link built",
+      data: {
+        emailLinkOrigin: origin,
+        confirmationHost,
+        usedHashedToken: typeof hashedToken === "string" && hashedToken.length > 0,
+        hasSiteUrlEnv: !!process.env.NEXT_PUBLIC_SITE_URL?.trim(),
+      },
+      timestamp: Date.now(),
+    }),
+  }).catch(() => {});
+  // #endregion
 
   try {
     await sendSignupConfirmationEmail({ to: email, confirmationUrl });
