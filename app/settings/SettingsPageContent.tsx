@@ -10,6 +10,7 @@ import SupabaseSetupBanner from "@/components/SupabaseSetupBanner";
 import SettingsShell, {
   type SettingsSection,
 } from "@/components/settings/SettingsShell";
+import AccountPasswordSection from "@/components/settings/AccountPasswordSection";
 import GpaPreferencesForm from "@/components/settings/GpaPreferencesForm";
 
 type PageState = "loading" | "unauthenticated" | "ready";
@@ -41,10 +42,21 @@ export default function SettingsPageContent() {
   const [section, setSection] = useState<SettingsSection>(() =>
     parseSection(searchParams.get("tab"))
   );
+  const [recoveryMode, setRecoveryMode] = useState(
+    () => searchParams.get("recovery") === "1"
+  );
 
   useEffect(() => {
     setSection(parseSection(searchParams.get("tab")));
+    setRecoveryMode(searchParams.get("recovery") === "1");
   }, [searchParams]);
+
+  function clearRecoveryParam() {
+    setRecoveryMode(false);
+    const url = new URL(window.location.href);
+    url.searchParams.delete("recovery");
+    window.history.replaceState(null, "", url.toString());
+  }
 
   function navigate(section: SettingsSection) {
     setSection(section);
@@ -202,18 +214,23 @@ export default function SettingsPageContent() {
                 />
 
                 {hasCredentials && (
-                  <div className="mt-6 flex flex-wrap items-center justify-between gap-4 border-t border-[var(--border)] pt-6">
-                    <Link href="/" className="cb-btn-primary text-sm">
-                      Go to dashboard
-                    </Link>
-                    <button
-                      type="button"
-                      onClick={handleDisconnect}
-                      disabled={disconnecting}
-                      className="cursor-pointer text-sm font-medium text-[var(--danger)] underline disabled:opacity-60"
-                    >
-                      {disconnecting ? "Disconnecting…" : "Disconnect Canvas"}
-                    </button>
+                  <div className="cb-settings-section-head mt-6 border-t border-[var(--border)] pt-6">
+                    <p className="min-w-0 flex-1 text-sm text-[var(--muted)]">
+                      Open your dashboard or disconnect Canvas from this account.
+                    </p>
+                    <div className="cb-settings-actions shrink-0">
+                      <button
+                        type="button"
+                        onClick={handleDisconnect}
+                        disabled={disconnecting}
+                        className="cb-btn-secondary cursor-pointer !text-[var(--danger)] disabled:opacity-60"
+                      >
+                        {disconnecting ? "Disconnecting…" : "Disconnect Canvas"}
+                      </button>
+                      <Link href="/" className="cb-btn-primary text-sm">
+                        Go to dashboard
+                      </Link>
+                    </div>
                   </div>
                 )}
               </div>
@@ -238,18 +255,31 @@ export default function SettingsPageContent() {
                 CanvasBuddy uses Supabase for sign-in. Your Canvas token is
                 stored separately and never shared with other users.
               </p>
+
+              {email && (
+                <AccountPasswordSection
+                  email={email}
+                  recoveryMode={recoveryMode}
+                  onRecoveryComplete={clearRecoveryParam}
+                />
+              )}
+
               <div className="border-t border-[var(--border)] pt-6">
-                <h3 className="text-sm font-semibold">Session</h3>
-                <p className="mt-1 text-sm text-[var(--muted)]">
-                  Sign out on this device. You can sign back in anytime.
-                </p>
-                <button
-                  type="button"
-                  onClick={handleLogout}
-                  className="cb-btn-secondary mt-4"
-                >
-                  Sign out
-                </button>
+                <div className="cb-settings-section-head">
+                  <div>
+                    <h3 className="text-sm font-semibold">Session</h3>
+                    <p className="mt-1 text-sm text-[var(--muted)]">
+                      Sign out on this device. You can sign back in anytime.
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleLogout}
+                    className="cb-btn-secondary shrink-0"
+                  >
+                    Sign out
+                  </button>
+                </div>
               </div>
             </div>
           </section>

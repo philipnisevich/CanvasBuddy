@@ -20,7 +20,7 @@ const SECTIONS: {
   {
     id: "account",
     label: "Account",
-    description: "Sign-in and session",
+    description: "Password, sign-in, and session",
     icon: User,
   },
   {

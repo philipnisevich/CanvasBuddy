@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import Alert from "@/components/ui/Alert";
 
 type AuthMode = "signin" | "signup";
@@ -9,6 +10,7 @@ export default function AuthForm() {
   const [mode, setMode] = useState<AuthMode>("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -17,6 +19,12 @@ export default function AuthForm() {
     e.preventDefault();
     setError(null);
     setMessage(null);
+
+    if (mode === "signup" && password !== confirmPassword) {
+      setError("Passwords do not match. Please re-enter them.");
+      return;
+    }
+
     setSubmitting(true);
 
     const endpoint = mode === "signup" ? "/api/auth/signup" : "/api/auth/signin";
@@ -25,7 +33,11 @@ export default function AuthForm() {
       const res = await fetch(endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify(
+          mode === "signup"
+            ? { email, password, confirmPassword }
+            : { email, password }
+        ),
       });
 
       const body = await res.json();
@@ -62,6 +74,7 @@ export default function AuthForm() {
           }`}
           onClick={() => {
             setMode("signin");
+            setConfirmPassword("");
             setError(null);
             setMessage(null);
           }}
@@ -77,6 +90,7 @@ export default function AuthForm() {
           }`}
           onClick={() => {
             setMode("signup");
+            setConfirmPassword("");
             setError(null);
             setMessage(null);
           }}
@@ -114,6 +128,22 @@ export default function AuthForm() {
         />
       </label>
 
+      {mode === "signup" && (
+        <label className="mt-4 block text-sm font-medium">
+          Confirm password
+          <input
+            type="password"
+            required
+            minLength={6}
+            autoComplete="new-password"
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
+            className="cb-input mt-1.5"
+            placeholder="Re-enter your password"
+          />
+        </label>
+      )}
+
       {error && <Alert className="mt-4">{error}</Alert>}
 
       {message && (
@@ -135,9 +165,19 @@ export default function AuthForm() {
       </button>
 
       {mode === "signin" && (
-        <p className="mt-4 text-center text-xs text-[var(--muted)]">
-          After signing in, connect Canvas in Settings to load your courses.
-        </p>
+        <>
+          <p className="mt-3 text-center text-sm">
+            <Link
+              href="/login?forgot=1"
+              className="font-medium text-[var(--accent)] hover:underline"
+            >
+              Forgot password?
+            </Link>
+          </p>
+          <p className="mt-4 text-center text-xs text-[var(--muted)]">
+            After signing in, connect Canvas in Settings to load your courses.
+          </p>
+        </>
       )}
     </form>
   );

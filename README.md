@@ -53,28 +53,38 @@ Optional. Enables **Sign in with Canvas** so students can skip pasting tokens.
    - **Site URL** to your deployed app URL (e.g. `https://your-app-domain.com`)
    - **Redirect URLs** to include your auth callback (e.g. `https://your-app-domain.com/auth/callback`)
 
-4. Copy environment variables:
+4. **Email confirmation (Brevo, not Supabase SMTP)**  
+   Sign-up sends confirmation links through [Brevo](https://www.brevo.com) transactional email. Supabase’s built-in auth emails are not used.
+   - Keep **Confirm email** enabled under **Authentication → Providers → Email** so accounts stay unverified until the link is clicked.
+   - You do not need to configure Supabase **SMTP** or custom email templates.
+   - In Brevo: create an API key, verify a sender address (**Senders & IPs**), then set `BREVO_API_KEY`, `BREVO_SENDER_EMAIL`, and optionally `BREVO_SENDER_NAME` in `.env.local`.
+   - Add `SUPABASE_SERVICE_ROLE_KEY` from **Project Settings → API** (server-only; never expose to the browser).
+
+5. Copy environment variables:
 
    ```bash
    cp .env.example .env.local
    ```
 
-5. Set at minimum:
+6. Set at minimum:
 
    ```bash
    SESSION_SECRET=<random-string-at-least-32-characters>
    NEXT_PUBLIC_SUPABASE_URL=<your-project-url>
    NEXT_PUBLIC_SUPABASE_ANON_KEY=<your-anon-key>
+   SUPABASE_SERVICE_ROLE_KEY=<your-service-role-key>
+   BREVO_API_KEY=<your-brevo-api-key>
+   BREVO_SENDER_EMAIL=<verified-sender@yourdomain.com>
    ANTHROPIC_API_KEY=<your-anthropic-api-key>   # optional; assistant only
    ```
 
-6. **Additional** for OAuth sign-in (school hosting):
+7. **Additional** for OAuth sign-in (school hosting):
 
    - `CANVAS_BASE_URL`
    - `CANVAS_CLIENT_ID` / `CANVAS_CLIENT_SECRET`
    - `CANVAS_REDIRECT_URI` (must match the redirect URI registered in Canvas)
 
-7. Install and run:
+8. Install and run:
 
    ```bash
    npm install
@@ -82,11 +92,11 @@ Optional. Enables **Sign in with Canvas** so students can skip pasting tokens.
    npm start
    ```
 
-8. Sign in at your app URL, then add your Canvas token in **Settings**.
+9. Sign in at your app URL, then add your Canvas token in **Settings**.
 
 ## How it works
 
-- **Supabase auth**: Each student signs in with email/password. Canvas tokens are stored per user in `user_canvas_credentials` (protected by row-level security). GPA scale and weighting live in `user_gpa_preferences` (run `supabase/migrations/003_user_gpa_preferences.sql` in the SQL editor).
+- **Supabase auth**: Each student signs in with email/password. Sign-up confirmation emails are sent via Brevo; the link is generated with the Supabase Admin API and still completes verification through `/auth/callback`. Canvas tokens are stored per user in `user_canvas_credentials` (protected by row-level security). GPA scale and weighting live in `user_gpa_preferences` (run `supabase/migrations/003_user_gpa_preferences.sql` in the SQL editor).
 - **Access token**: Student supplies Canvas URL + personal access token in Settings; server validates via `GET /api/v1/users/self`.
 - **OAuth** (optional): Authorization code flow with refresh tokens when the school configures a developer key.
 - Grades: `GET /api/v1/courses?include[]=total_scores`

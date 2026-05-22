@@ -7,9 +7,11 @@ import { AppShellCentered } from "@/components/ui/AppShell";
 import Alert from "@/components/ui/Alert";
 import OnboardingSteps from "@/components/ui/OnboardingSteps";
 import AuthForm from "@/components/AuthForm";
+import ForgotPasswordForm from "@/components/ForgotPasswordForm";
 
 export default function LoginPageContent() {
   const searchParams = useSearchParams();
+  const forgotMode = searchParams.get("forgot") === "1";
   const [callbackError, setCallbackError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -38,7 +40,7 @@ export default function LoginPageContent() {
       )}
 
       <div className="cb-card mt-8 p-6 sm:p-8">
-        <AuthForm />
+        {forgotMode ? <ForgotPasswordForm /> : <AuthForm />}
       </div>
 
       <p className="mt-6 text-center text-sm text-[var(--muted)]">

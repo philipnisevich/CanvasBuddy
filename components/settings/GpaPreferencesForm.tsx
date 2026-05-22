@@ -255,7 +255,7 @@ export default function GpaPreferencesForm() {
             )}
           </fieldset>
 
-        <div className="flex flex-wrap items-center gap-4 border-t border-[var(--border)] pt-6">
+        <div className="border-t border-[var(--border)] pt-6">
           <button
             type="submit"
             disabled={saving}
@@ -263,7 +263,7 @@ export default function GpaPreferencesForm() {
           >
             {saving ? "Saving…" : "Save GPA settings"}
           </button>
-          <p className="text-xs text-[var(--muted)]">
+          <p className="mt-3 text-xs text-[var(--muted)]">
             {weighted
               ? `Dashboard will show unweighted (4.0) and weighted (up to ${prefs.maxWeightedGpa.toFixed(1)}).`
               : "Dashboard will show unweighted GPA only."}

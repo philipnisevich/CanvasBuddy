@@ -1,14 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
-import { getSupabaseEnvError } from "@/lib/supabase/env";
+import { buildAuthCallbackUrl } from "@/lib/auth/auth-callback-url";
+import { getSignupEnvError } from "@/lib/auth/signup-env";
+import { sendSignupConfirmationEmail } from "@/lib/brevo/send-signup-confirmation";
+import { createAdminClient } from "@/lib/supabase/admin";
 
 export async function POST(request: NextRequest) {
-  const envError = getSupabaseEnvError();
+  const envError = getSignupEnvError();
   if (envError) {
     return NextResponse.json({ message: envError }, { status: 503 });
   }
 
-  let body: { email?: string; password?: string };
+  let body: { email?: string; password?: string; confirmPassword?: string };
   try {
     body = await request.json();
   } catch {
@@ -17,39 +19,84 @@ export async function POST(request: NextRequest) {
 
   const email = body.email?.trim();
   const password = body.password?.trim();
+  const confirmPassword = body.confirmPassword?.trim();
 
-  if (!email || !password) {
+  if (!email || !password || !confirmPassword) {
     return NextResponse.json(
-      { message: "Email and password are required." },
+      { message: "Email, password, and password confirmation are required." },
+      { status: 400 }
+    );
+  }
+
+  if (password !== confirmPassword) {
+    return NextResponse.json(
+      { message: "Passwords do not match. Please re-enter them." },
       { status: 400 }
     );
   }
 
   const origin = request.headers.get("origin") ?? new URL(request.url).origin;
-  const supabase = await createClient();
-  const { data, error } = await supabase.auth.signUp({
+  const redirectTo = `${origin}/auth/callback?next=/settings`;
+
+  const admin = createAdminClient();
+  const { data: linkData, error: linkError } = await admin.auth.admin.generateLink({
+    type: "signup",
     email,
     password,
-    options: {
-      emailRedirectTo: `${origin}/auth/callback?next=/settings`,
-    },
+    options: { redirectTo },
   });
 
-  if (error) {
-    if (error.status === 429 || error.message.includes("rate limit")) {
+  if (linkError) {
+    if (linkError.status === 429 || linkError.message.includes("rate limit")) {
       return NextResponse.json(
         {
           message:
-            "Supabase has temporarily limited confirmation emails (often after several sign-up attempts). Wait about an hour, try signing in if you already created an account, or for local dev disable “Confirm email” in Supabase → Authentication → Providers → Email.",
+            "Too many sign-up attempts. Wait a while and try again, or sign in if you already created an account.",
         },
         { status: 429 }
       );
     }
-    return NextResponse.json({ message: error.message }, { status: 400 });
+    return NextResponse.json({ message: linkError.message }, { status: 400 });
+  }
+
+  const hashedToken = linkData?.properties?.hashed_token;
+  const actionLink = linkData?.properties?.action_link;
+  const userId = linkData?.user?.id;
+  const nextPath = "/settings";
+
+  // Prefer app callback with token_hash (SSR verifyOtp). action_link goes through
+  // Supabase verify then often returns a PKCE code without a client verifier.
+  const confirmationUrl =
+    typeof hashedToken === "string" && hashedToken.length > 0
+      ? buildAuthCallbackUrl(origin, {
+          hashedToken,
+          type: "signup",
+          next: nextPath,
+        })
+      : actionLink;
+
+  if (!confirmationUrl) {
+    return NextResponse.json(
+      { message: "Could not create a confirmation link. Please try again." },
+      { status: 500 }
+    );
+  }
+
+  try {
+    await sendSignupConfirmationEmail({ to: email, confirmationUrl });
+  } catch (err) {
+    if (userId) {
+      await admin.auth.admin.deleteUser(userId);
+    }
+    const message =
+      err instanceof Error
+        ? err.message
+        : "Could not send the confirmation email. Check Brevo configuration and try again.";
+    return NextResponse.json({ message }, { status: 503 });
   }
 
   return NextResponse.json({
     ok: true,
-    needsEmailConfirmation: !data.session,
+    needsEmailConfirmation: true,
   });
 }

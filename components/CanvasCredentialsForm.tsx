@@ -118,7 +118,7 @@ export default function CanvasCredentialsForm({
       <button
         type="submit"
         disabled={submitting}
-        className="cb-btn-primary mt-6 w-full py-3"
+        className="cb-btn-primary mt-6 py-3"
       >
         {submitting ? "Saving…" : submitLabel}
       </button>
