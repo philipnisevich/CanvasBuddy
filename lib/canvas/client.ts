@@ -1,162 +1,25 @@
 import { getTomorrowYmd, getYmdInTimezone, formatDueAt } from "@/lib/dates";
+import { fetchCoursesWithGrades } from "./courses";
+import { mapCourseGrades } from "./grades";
 import type {
   CanvasAssignment,
   CanvasCourse,
-  CanvasEnrollment,
   CanvasPlannerItem,
-  CanvasUser,
-  CourseGrade,
   DueTomorrowItem,
   DashboardData,
 } from "./types";
 
+export {
+  CanvasApiError,
+  fetchCanvasPaginated,
+  fetchCanvasUser,
+  verifyCanvasToken,
+} from "./client-core";
+
+import { fetchCanvasPaginated, fetchCanvasUser } from "./client-core";
+
 const GRADABLE_TYPES = new Set(["assignment", "quiz"]);
-
-/** Canvas returns "student" or "StudentEnrollment" depending on endpoint/version. */
-const STUDENT_ENROLLMENT_TYPES = new Set(["StudentEnrollment", "student"]);
-
 const SUBMITTED_STATES = new Set(["submitted", "graded", "pending_review"]);
-
-function findStudentEnrollment(course: CanvasCourse) {
-  return course.enrollments?.find((e) =>
-    STUDENT_ENROLLMENT_TYPES.has(e.type)
-  );
-}
-
-function parseLinkHeader(header: string | null): string | null {
-  if (!header) return null;
-  const match = header.match(/<([^>]+)>;\s*rel="next"/);
-  return match ? match[1] : null;
-}
-
-export class CanvasApiError extends Error {
-  constructor(
-    message: string,
-    public status: number
-  ) {
-    super(message);
-    this.name = "CanvasApiError";
-  }
-}
-
-export async function fetchCanvasPaginated<T>(
-  baseUrl: string,
-  path: string,
-  accessToken: string
-): Promise<T[]> {
-  const results: T[] = [];
-  let url: string | null = `${baseUrl}${path}`;
-
-  while (url) {
-    const res = await fetch(url, {
-      headers: { Authorization: `Bearer ${accessToken}` },
-      cache: "no-store",
-    });
-
-    if (!res.ok) {
-      const text = await res.text();
-      throw new CanvasApiError(
-        `Canvas API error (${res.status}): ${text.slice(0, 200)}`,
-        res.status
-      );
-    }
-
-    const page = (await res.json()) as T[];
-    results.push(...page);
-    url = parseLinkHeader(res.headers.get("Link"));
-  }
-
-  return results;
-}
-
-export async function fetchCanvasUser(
-  baseUrl: string,
-  accessToken: string
-): Promise<CanvasUser> {
-  const res = await fetch(`${baseUrl}/api/v1/users/self`, {
-    headers: { Authorization: `Bearer ${accessToken}` },
-    cache: "no-store",
-  });
-
-  if (!res.ok) {
-    throw new CanvasApiError(`Failed to fetch user (${res.status})`, res.status);
-  }
-
-  return res.json() as Promise<CanvasUser>;
-}
-
-export async function verifyCanvasToken(
-  baseUrl: string,
-  accessToken: string
-): Promise<CanvasUser> {
-  return fetchCanvasUser(baseUrl, accessToken);
-}
-
-function pickDisplayGrade(enrollment: CanvasEnrollment): {
-  score: number | null;
-  grade: string | null;
-} {
-  if (
-    enrollment.has_grading_periods &&
-    enrollment.current_grading_period_id != null &&
-    enrollment.current_period_computed_current_score != null
-  ) {
-    return {
-      score: enrollment.current_period_computed_current_score,
-      grade: enrollment.current_period_computed_current_grade ?? null,
-    };
-  }
-
-  if (
-    enrollment.grades?.current_score != null ||
-    enrollment.grades?.current_grade != null
-  ) {
-    return {
-      score: enrollment.grades.current_score ?? null,
-      grade: enrollment.grades.current_grade ?? null,
-    };
-  }
-
-  return {
-    score: enrollment.computed_current_score ?? null,
-    grade: enrollment.computed_current_grade ?? null,
-  };
-}
-
-function mapCourseGrades(courses: CanvasCourse[]): CourseGrade[] {
-  return courses
-    .map((course): CourseGrade | null => {
-      const enrollment = findStudentEnrollment(course);
-      if (!enrollment) return null;
-
-      if (course.hide_final_grades) {
-        return {
-          courseId: course.id,
-          courseName: course.name,
-          courseCode: course.course_code,
-          currentScore: null,
-          currentGrade: null,
-          gradesUrl: enrollment.grades?.html_url ?? null,
-          hidden: true,
-        };
-      }
-
-      const { score, grade } = pickDisplayGrade(enrollment);
-      const hidden = score === null && grade === null;
-
-      return {
-        courseId: course.id,
-        courseName: course.name,
-        courseCode: course.course_code,
-        currentScore: typeof score === "number" ? score : null,
-        currentGrade: grade ?? null,
-        gradesUrl: enrollment.grades?.html_url ?? null,
-        hidden,
-      };
-    })
-    .filter((g): g is CourseGrade => g !== null)
-    .sort((a, b) => a.courseName.localeCompare(b.courseName));
-}
 
 function resolveHtmlUrl(baseUrl: string, url: string): string {
   if (url.startsWith("http")) return url;
@@ -293,15 +156,16 @@ export async function fetchDashboardData(
   timezone: string
 ): Promise<DashboardData> {
   const tomorrowYmd = getTomorrowYmd(timezone);
-
-  const coursesPath =
-    "/api/v1/courses?enrollment_state=active&include[]=enrollments&include[]=total_scores&include[]=current_grading_period_scores&per_page=100";
   const plannerPath = `/api/v1/planner/items?start_date=${tomorrowYmd}&end_date=${tomorrowYmd}&per_page=100`;
 
   const [user, courses, plannerItems] = await Promise.all([
     fetchCanvasUser(baseUrl, accessToken),
-    fetchCanvasPaginated<CanvasCourse>(baseUrl, coursesPath, accessToken),
-    fetchCanvasPaginated<CanvasPlannerItem>(baseUrl, plannerPath, accessToken),
+    fetchCoursesWithGrades(baseUrl, accessToken, ["active"]),
+    fetchCanvasPaginated<CanvasPlannerItem>(
+      baseUrl,
+      plannerPath,
+      accessToken
+    ),
   ]);
 
   const courseNameById = new Map(

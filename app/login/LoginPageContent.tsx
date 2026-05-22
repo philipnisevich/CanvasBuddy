@@ -44,7 +44,7 @@ export default function LoginPageContent() {
       </div>
 
       <p className="mt-6 text-center text-sm text-[var(--muted)]">
-        <Link href="/" className="font-medium text-[var(--accent)] hover:underline">
+        <Link href="/" className="cb-link">
           ← Back to home
         </Link>
       </p>

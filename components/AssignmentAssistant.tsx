@@ -7,7 +7,8 @@ import Alert from "@/components/ui/Alert";
 const EXAMPLE_PROMPTS = [
   "When is my chem project due?",
   "What do I have due tomorrow?",
-  "Outline my English assignment due tomorrow.",
+  "Which class has my lowest grade?",
+  "Describe what's going on in my English class.",
 ];
 
 interface ChatMessage {
@@ -15,7 +16,11 @@ interface ChatMessage {
   content: string;
 }
 
-export default function AssignmentAssistant() {
+export default function AssignmentAssistant({
+  fullPage = false,
+}: {
+  fullPage?: boolean;
+}) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
@@ -27,11 +32,17 @@ export default function AssignmentAssistant() {
 
     setError(null);
     setLoading(true);
-    setMessages((prev) => [...prev, { role: "user", content: trimmed }]);
+    const nextMessages: ChatMessage[] = [
+      ...messages,
+      { role: "user", content: trimmed },
+    ];
+    setMessages(nextMessages);
     setInput("");
 
     const timezone =
       Intl.DateTimeFormat().resolvedOptions().timeZone || "America/New_York";
+
+    const history = messages.slice(-6);
 
     try {
       const res = await fetch("/api/assistant", {
@@ -40,24 +51,24 @@ export default function AssignmentAssistant() {
           "Content-Type": "application/json",
           "X-Timezone": timezone,
         },
-        body: JSON.stringify({ message: trimmed }),
+        body: JSON.stringify({ message: trimmed, history }),
       });
 
       const body = await res.json();
 
       if (!res.ok) {
         setError(body.message ?? "Could not get an answer. Try again.");
-        setMessages((prev) => prev.slice(0, -1));
+        setMessages(messages);
         return;
       }
 
-      setMessages((prev) => [
-        ...prev,
+      setMessages([
+        ...nextMessages,
         { role: "assistant", content: body.answer as string },
       ]);
     } catch {
       setError("Network error. Check your connection and try again.");
-      setMessages((prev) => prev.slice(0, -1));
+      setMessages(messages);
     } finally {
       setLoading(false);
     }
@@ -68,8 +79,12 @@ export default function AssignmentAssistant() {
     ask(input);
   }
 
+  const transcriptMaxH = fullPage ? "min-h-[24rem] max-h-[50vh]" : "max-h-[28rem]";
+
   return (
-    <section className="cb-card flex flex-col overflow-hidden">
+    <section
+      className={`cb-card flex flex-col overflow-hidden ${fullPage ? "min-h-[32rem]" : ""}`}
+    >
       <header className="shrink-0 border-b border-[var(--border)] bg-[var(--accent-soft)] px-5 py-4">
         <div className="flex items-center gap-2">
           <Sparkles
@@ -82,14 +97,16 @@ export default function AssignmentAssistant() {
           </h2>
         </div>
         <p className="mt-1 text-sm font-medium text-[var(--color-text-muted)]">
-          Ask about due dates, what&apos;s coming up, or how to break down an
+          Ask about due dates, grades, class workload, or how to break down an
           assignment. Answers use your live Canvas data.
         </p>
       </header>
 
       <div className="min-h-0 flex-1">
         {messages.length > 0 && (
-          <ul className="max-h-[28rem] space-y-3 overflow-y-auto px-4 py-4">
+          <ul
+            className={`${transcriptMaxH} space-y-3 overflow-y-auto px-4 py-4`}
+          >
             {messages.map((msg, i) => (
               <li
                 key={`${msg.role}-${i}`}

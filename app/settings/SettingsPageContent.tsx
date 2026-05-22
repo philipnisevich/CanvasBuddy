@@ -12,6 +12,7 @@ import SettingsShell, {
 } from "@/components/settings/SettingsShell";
 import AccountPasswordSection from "@/components/settings/AccountPasswordSection";
 import GpaPreferencesForm from "@/components/settings/GpaPreferencesForm";
+import { useApp } from "@/contexts/AppProvider";
 
 type PageState = "loading" | "unauthenticated" | "ready";
 
@@ -25,6 +26,7 @@ function parseSection(value: string | null): SettingsSection {
 }
 
 export default function SettingsPageContent() {
+  const { gate } = useApp();
   const searchParams = useSearchParams();
   const [state, setState] = useState<PageState>("loading");
   const [email, setEmail] = useState<string | null>(null);
@@ -96,14 +98,20 @@ export default function SettingsPageContent() {
       }
     }
 
+    let credentialsConnected = false;
     if (settingsRes.ok) {
       const settings = await settingsRes.json();
-      setHasCredentials(!!settings.hasCredentials);
+      credentialsConnected = !!settings.hasCredentials;
+      setHasCredentials(credentialsConnected);
       setCanvasBaseUrl(settings.canvasBaseUrl ?? "");
     }
 
     setState("ready");
-  }, []);
+
+    if (credentialsConnected) {
+      await gate.checkAuth({ silent: true });
+    }
+  }, [gate.checkAuth]);
 
   useEffect(() => {
     loadSettings();
@@ -115,6 +123,7 @@ export default function SettingsPageContent() {
       await fetch("/api/settings/canvas", { method: "DELETE" });
       setHasCredentials(false);
       setCanvasBaseUrl("");
+      await gate.checkAuth({ silent: true });
     } finally {
       setDisconnecting(false);
     }
@@ -157,7 +166,7 @@ export default function SettingsPageContent() {
       subtitle={email ? `Signed in as ${email}` : undefined}
       actions={
         <Link href="/" className="cb-btn-secondary-nav">
-          Dashboard
+          Home
         </Link>
       }
     >
@@ -207,9 +216,10 @@ export default function SettingsPageContent() {
               <div className="px-6 py-6">
                 <CanvasCredentialsForm
                   initialCanvasBaseUrl={canvasBaseUrl}
-                  onSuccess={() => {
+                  onSuccess={async () => {
                     setHasCredentials(true);
-                    loadSettings();
+                    await loadSettings();
+                    await gate.checkAuth({ silent: true });
                   }}
                 />
 
@@ -219,17 +229,17 @@ export default function SettingsPageContent() {
                       Open your dashboard or disconnect Canvas from this account.
                     </p>
                     <div className="cb-settings-actions shrink-0">
+                      <Link href="/" className="cb-btn-primary text-sm">
+                        Go to dashboard
+                      </Link>
                       <button
                         type="button"
                         onClick={handleDisconnect}
                         disabled={disconnecting}
-                        className="cb-btn-secondary cursor-pointer !text-[var(--danger)] disabled:opacity-60"
+                        className="cb-btn-danger"
                       >
                         {disconnecting ? "Disconnecting…" : "Disconnect Canvas"}
                       </button>
-                      <Link href="/" className="cb-btn-primary text-sm">
-                        Go to dashboard
-                      </Link>
                     </div>
                   </div>
                 )}

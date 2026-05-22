@@ -1,16 +1,19 @@
 # CanvasBuddy
 
-A student dashboard that connects to Canvas and shows:
+A student dashboard that connects to Canvas and helps you stay on top of schoolwork:
 
-- **Current grades** for all active courses
-- **Assignments and quizzes due tomorrow** across all classes
-- **AI assignment assistant** — ask natural-language questions about due dates and how to approach work (powered by Claude)
+- **Home** — customizable widget board (grades, GPA, due tomorrow, upcoming preview, missing work, AI shortcut, and more)
+- **Grades** — scores and letter grades for active courses, plus unweighted/weighted GPA estimates
+- **Upcoming** — what’s due tomorrow and a configurable day-by-day horizon
+- **Missing** — assignments marked missing, overdue without submission, or scored zero
+- **AI** — study helper that answers questions about your classes, due dates, and grades (powered by Claude, with conversation context)
 
 ## For students
 
-1. **Create an account** or sign in at `/login` (email and password via Supabase).
-2. Open **Settings** and add your school **Canvas URL** and a **personal access token** from Canvas.
-3. Return to the dashboard to see grades, due tomorrow, and the assignment assistant.
+1. **Create an account** or sign in at `/login` (email and password).
+2. Open **Settings** → **Canvas** and add your school **Canvas URL** and a **personal access token**.
+3. Optionally open **Settings** → **GPA** to set scale and weighting for GPA widgets and estimates.
+4. Use **Home**, **Grades**, **Upcoming**, **Missing**, and **AI** from the main navigation. On Home, tap **Customize** to rearrange widgets, resize large tiles, and add or remove widgets.
 
 ### Getting a Canvas access token
 
@@ -37,7 +40,7 @@ Optional. Enables **Sign in with Canvas** so students can skip pasting tokens.
    - `url:GET|/api/v1/courses`
    - `url:GET|/api/v1/planner/items`
    - `url:GET|/api/v1/users/self`
-   - `url:GET|/api/v1/courses/:course_id/assignments` (for the assignment assistant)
+   - `url:GET|/api/v1/courses/:course_id/assignments` (assignments, missing work, and the AI helper)
 4. Enable the key and copy **Client ID** and **Client Secret**.
 5. Configure environment variables (see below).
 
@@ -47,7 +50,11 @@ Optional. Enables **Sign in with Canvas** so students can skip pasting tokens.
 
 1. Create a [Supabase](https://supabase.com) project.
 
-2. In the Supabase SQL editor, run the migration in `supabase/migrations/001_user_canvas_credentials.sql`.
+2. In the Supabase SQL editor, run these migrations in order:
+   - `supabase/migrations/001_user_canvas_credentials.sql`
+   - `supabase/migrations/003_user_gpa_preferences.sql`
+   - `supabase/migrations/004_user_app_preferences.sql`  
+   If you see permission errors on Canvas or GPA tables after sign-in, also run `supabase/migrations/002_grants.sql`.
 
 3. In Supabase **Authentication → URL Configuration**, set:
    - **Site URL** to your deployed app URL (e.g. `https://your-app-domain.com`)
@@ -75,7 +82,7 @@ Optional. Enables **Sign in with Canvas** so students can skip pasting tokens.
    SUPABASE_SERVICE_ROLE_KEY=<your-service-role-key>
    BREVO_API_KEY=<your-brevo-api-key>
    BREVO_SENDER_EMAIL=<verified-sender@yourdomain.com>
-   ANTHROPIC_API_KEY=<your-anthropic-api-key>   # optional; assistant only
+   ANTHROPIC_API_KEY=<your-anthropic-api-key>   # required for /ai
    ```
 
 7. **Additional** for OAuth sign-in (school hosting):
@@ -92,22 +99,35 @@ Optional. Enables **Sign in with Canvas** so students can skip pasting tokens.
    npm start
    ```
 
-9. Sign in at your app URL, then add your Canvas token in **Settings**.
+9. Sign in at your app URL, connect Canvas in **Settings**, then explore **Home** and the other pages.
 
 ## How it works
 
-- **Supabase auth**: Each student signs in with email/password. Sign-up confirmation emails are sent via Brevo; the link is generated with the Supabase Admin API and still completes verification through `/auth/callback`. Canvas tokens are stored per user in `user_canvas_credentials` (protected by row-level security). GPA scale and weighting live in `user_gpa_preferences` (run `supabase/migrations/003_user_gpa_preferences.sql` in the SQL editor).
-- **Access token**: Student supplies Canvas URL + personal access token in Settings; server validates via `GET /api/v1/users/self`.
-- **OAuth** (optional): Authorization code flow with refresh tokens when the school configures a developer key.
-- Grades: `GET /api/v1/courses?include[]=total_scores`
-- Due tomorrow: `GET /api/v1/planner/items` for the next calendar day in your timezone
-- Assignment assistant: loads assignments from each active course, sends a summarized snapshot to Claude — your Canvas token never leaves the server except for Canvas API calls
+### Auth and stored preferences
 
-### Example assistant questions
+- **Supabase auth**: Email/password sign-in. Sign-up confirmation emails go through Brevo; links are created with the Supabase service role and finish at `/auth/callback`.
+- **`user_canvas_credentials`**: Per-user Canvas URL and access token (row-level security).
+- **`user_gpa_preferences`**: GPA scale and weighting for widgets and estimates.
+- **`user_app_preferences`**: Home widget layout and upcoming horizon (days). Without migration 004, layout can fall back to browser storage.
+
+### Pages and Canvas data
+
+| Page | What it shows | Main Canvas APIs |
+|------|----------------|------------------|
+| **Home** | Drag-and-drop widgets; layout saved per user | Courses, planner, assignments (shared app-data fetch) |
+| **Grades** | Active course scores and GPA | `GET /api/v1/courses` with grade includes |
+| **Upcoming** | Due tomorrow + assignments in your horizon | Planner + per-course assignments |
+| **Missing** | Missing, overdue, or zero-scored work (lookback window) | Per-course assignments |
+| **AI** | Chat about your schedule and classes | Same assignment/grade context sent to Claude |
+
+Canvas tokens stay on the server. The AI route receives a summarized snapshot of grades and assignments (and optional GPA summary); it does not send your raw token to Anthropic.
+
+### Example AI questions
 
 - “When is my chem project due?”
 - “What do I have due tomorrow?”
-- “Look at my English assignment for tomorrow and give me an outline for how to do it.”
+- “Which class has my lowest grade?”
+- “Describe what’s going on in my English class and how I should approach the next assignment.”
 
 ## Scripts
 

@@ -1,12 +1,16 @@
 import Link from "next/link";
 import { GraduationCap } from "lucide-react";
+import AppNav from "@/components/ui/AppNav";
 
-function Logo({ onDark = false }: { onDark?: boolean }) {
-  return (
-    <Link
-      href="/"
-      className="group flex cursor-pointer items-center gap-2.5 transition-opacity duration-200 hover:opacity-90"
-    >
+function Logo({
+  onDark = false,
+  linked = true,
+}: {
+  onDark?: boolean;
+  linked?: boolean;
+}) {
+  const mark = (
+    <>
       <span
         className={`flex h-10 w-10 items-center justify-center rounded-[var(--radius)] ${
           onDark
@@ -26,6 +30,21 @@ function Logo({ onDark = false }: { onDark?: boolean }) {
       >
         CanvasBuddy
       </span>
+    </>
+  );
+
+  if (!linked) {
+    return (
+      <span className="group inline-flex items-center gap-2.5">{mark}</span>
+    );
+  }
+
+  return (
+    <Link
+      href="/"
+      className="group flex cursor-pointer items-center gap-2.5 transition-opacity duration-200 hover:opacity-90"
+    >
+      {mark}
     </Link>
   );
 }
@@ -34,10 +53,12 @@ export default function AppShell({
   children,
   actions,
   subtitle,
+  showNav = false,
 }: {
   children: React.ReactNode;
   actions?: React.ReactNode;
   subtitle?: string;
+  showNav?: boolean;
 }) {
   return (
     <div className="min-h-screen">
@@ -45,23 +66,26 @@ export default function AppShell({
         Skip to main content
       </a>
       <header className="cb-nav-shell">
-        <div className="cb-nav-shell-inner flex flex-wrap items-center justify-between gap-4">
-          <div>
-            <Logo onDark />
-            {subtitle && (
-              <p className="mt-1 pl-12 text-sm font-medium text-[var(--color-nav-muted)]">
-                {subtitle}
-              </p>
+        <div className="cb-nav-shell-inner flex flex-col gap-4">
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <div>
+              <Logo onDark />
+              {subtitle && (
+                <p className="mt-1 pl-12 text-sm font-medium text-[var(--color-nav-muted)]">
+                  {subtitle}
+                </p>
+              )}
+            </div>
+            {actions && (
+              <nav
+                className="flex flex-wrap items-center gap-2"
+                aria-label="Account"
+              >
+                {actions}
+              </nav>
             )}
           </div>
-          {actions && (
-            <nav
-              className="flex flex-wrap items-center gap-2"
-              aria-label="Account"
-            >
-              {actions}
-            </nav>
-          )}
+          {showNav && <AppNav />}
         </div>
       </header>
       <main
@@ -96,7 +120,7 @@ export function AppShellCentered({
             href="/"
             className="inline-flex cursor-pointer items-center gap-3 transition-opacity duration-200 hover:opacity-90"
           >
-            <Logo />
+            <Logo linked={false} />
           </Link>
         </div>
         <main

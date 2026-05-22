@@ -4,6 +4,8 @@ import type { DueTomorrowItem } from "@/lib/canvas/types";
 interface DueTomorrowListProps {
   items: DueTomorrowItem[];
   tomorrowDate: string;
+  /** Fills parent grid cell (home widget); empty state keeps full height */
+  embedded?: boolean;
 }
 
 function groupByCourse(
@@ -28,10 +30,17 @@ const typeLabels: Record<string, string> = {
 export default function DueTomorrowList({
   items,
   tomorrowDate,
+  embedded = false,
 }: DueTomorrowListProps) {
   if (items.length === 0) {
     return (
-      <div className="cb-card flex flex-col items-center px-6 py-12 text-center">
+      <div
+        className={
+          embedded
+            ? "cb-card flex h-full min-h-full flex-col items-center justify-center px-4 py-6 text-center"
+            : "cb-card flex flex-col items-center px-6 py-12 text-center"
+        }
+      >
         <span
           className="mb-3 flex h-14 w-14 items-center justify-center rounded-full border-2 border-[var(--success)] bg-[var(--success-soft)] text-[var(--success)]"
           aria-hidden
@@ -48,8 +57,8 @@ export default function DueTomorrowList({
 
   const grouped = groupByCourse(items);
 
-  return (
-    <div className="space-y-4">
+  const list = (
+    <div className={embedded ? "space-y-2" : "space-y-4"}>
       {[...grouped.entries()].map(([courseName, courseItems]) => (
         <section key={courseName} className="cb-card overflow-hidden">
           <h3 className="border-b-[3px] border-[var(--border)] bg-[var(--card-muted)] px-5 py-3 text-sm font-bold text-[var(--color-text)]">
@@ -102,4 +111,14 @@ export default function DueTomorrowList({
       ))}
     </div>
   );
+
+  if (embedded) {
+    return (
+      <div className="flex h-full min-h-full flex-col overflow-hidden">
+        <div className="min-h-0 flex-1 overflow-y-auto">{list}</div>
+      </div>
+    );
+  }
+
+  return list;
 }

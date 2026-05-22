@@ -1,12 +1,20 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { NextRequest, NextResponse } from "next/server";
-import { getCanvasContext, clearSessionOnUnauthorized } from "@/lib/auth";
-import { fetchCanvasUser, CanvasApiError } from "@/lib/canvas/client";
+import { getCanvasContext } from "@/lib/auth";
+import { fetchCanvasUser } from "@/lib/canvas/client";
 import { fetchAssignmentAssistantContext } from "@/lib/canvas/assignments";
 import {
   answerAssignmentQuestion,
   isAssistantConfigured,
+  type ChatTurn,
 } from "@/lib/anthropic/assistant";
+import { calculateGpa } from "@/lib/gpa";
+import { getGpaPreferences } from "@/lib/gpa-preferences-db";
+import { getSupabaseUser } from "@/lib/supabase/auth";
+import {
+  canvasUnauthorizedResponse,
+  handleCanvasRouteError,
+} from "@/lib/api/canvas-route";
 import { getDefaultTimezone } from "@/lib/dates";
 
 export async function POST(request: NextRequest) {
@@ -22,17 +30,9 @@ export async function POST(request: NextRequest) {
   }
 
   const ctx = await getCanvasContext();
-  if (!ctx) {
-    return NextResponse.json(
-      {
-        error: "unauthorized",
-        message: "Add your Canvas token in Settings.",
-      },
-      { status: 401 }
-    );
-  }
+  if (!ctx) return canvasUnauthorizedResponse();
 
-  let body: { message?: string };
+  let body: { message?: string; history?: ChatTurn[] };
   try {
     body = await request.json();
   } catch {
@@ -43,6 +43,7 @@ export async function POST(request: NextRequest) {
   }
 
   const message = typeof body.message === "string" ? body.message : "";
+  const history = Array.isArray(body.history) ? body.history : undefined;
   if (!message.trim()) {
     return NextResponse.json(
       { error: "invalid_body", message: "message is required." },
@@ -62,47 +63,39 @@ export async function POST(request: NextRequest) {
       user.name
     );
 
-    const answer = await answerAssignmentQuestion(assignmentContext, message);
+    let gpaSummary = null;
+    try {
+      const { supabase, user: supaUser } = await getSupabaseUser();
+      if (supaUser) {
+        const prefs = await getGpaPreferences(supabase, supaUser.id);
+        const gpa = calculateGpa(assignmentContext.grades, prefs);
+        gpaSummary = {
+          unweighted: gpa.unweighted,
+          weighted: gpa.weighted,
+          coursesIncluded: gpa.coursesIncluded,
+        };
+      }
+    } catch {
+      /* optional */
+    }
+
+    const answer = await answerAssignmentQuestion(
+      { ...assignmentContext, gpaSummary },
+      message,
+      history
+    );
 
     return NextResponse.json({ answer });
   } catch (err) {
-    if (err instanceof CanvasApiError) {
-      if (err.status === 401) {
-        await clearSessionOnUnauthorized();
-        return NextResponse.json(
-          {
-            error: "unauthorized",
-            message:
-              "Your Canvas session expired or was revoked. Please connect again.",
-          },
-          { status: 401 }
-        );
-      }
-      if (err.status === 429) {
-        return NextResponse.json(
-          {
-            error: "rate_limited",
-            message: "Canvas is rate limiting requests. Try again in a minute.",
-          },
-          { status: 429 }
-        );
-      }
-      return NextResponse.json(
-        { error: "canvas_error", message: err.message },
-        { status: err.status >= 400 ? err.status : 502 }
-      );
-    }
-
     const msg = err instanceof Error ? err.message : "Failed to get an answer";
     const isAnthropic =
       msg.includes("ANTHROPIC") || err instanceof Anthropic.APIError;
-
-    return NextResponse.json(
-      {
-        error: isAnthropic ? "anthropic_error" : "server_error",
-        message: msg,
-      },
-      { status: isAnthropic ? 502 : 500 }
-    );
+    if (isAnthropic) {
+      return NextResponse.json(
+        { error: "anthropic_error", message: msg },
+        { status: 502 }
+      );
+    }
+    return handleCanvasRouteError(err);
   }
 }

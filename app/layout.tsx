@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Lato, Source_Sans_3 } from "next/font/google";
+import ClientRoot from "@/components/ClientRoot";
 import "./globals.css";
 
 const lato = Lato({
@@ -29,7 +30,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={`${lato.variable} ${sourceSans.variable}`}>
-      <body className="min-h-screen antialiased">{children}</body>
+      <body className="min-h-screen antialiased">
+        <ClientRoot>{children}</ClientRoot>
+      </body>
     </html>
   );
 }

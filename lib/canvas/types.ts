@@ -1,6 +1,16 @@
+export interface CanvasGradingPeriod {
+  id: number;
+  title?: string;
+  start_date?: string | null;
+  end_date?: string | null;
+  close_date?: string | null;
+  is_closed?: boolean;
+}
+
 export interface CanvasEnrollment {
   type: string;
   role: string;
+  course_id?: number;
   computed_current_score?: number | null;
   computed_final_score?: number | null;
   computed_current_grade?: string | null;
@@ -8,6 +18,7 @@ export interface CanvasEnrollment {
   has_grading_periods?: boolean;
   totals_for_all_grading_periods_option?: boolean;
   current_grading_period_id?: number | null;
+  current_grading_period_title?: string | null;
   current_period_computed_current_score?: number | null;
   current_period_computed_current_grade?: string | null;
   current_period_computed_final_score?: number | null;
@@ -21,12 +32,30 @@ export interface CanvasEnrollment {
   };
 }
 
+export interface CanvasTerm {
+  id: number;
+  name: string;
+  start_at?: string | null;
+  end_at?: string | null;
+}
+
 export interface CanvasCourse {
   id: number;
   name: string;
   course_code?: string;
   hide_final_grades?: boolean;
+  enrollment_term_id?: number;
+  term?: CanvasTerm | null;
   enrollments?: CanvasEnrollment[];
+  grading_periods?: CanvasGradingPeriod[];
+  has_grading_periods?: boolean;
+}
+
+export interface GradingPeriodOption {
+  id: number;
+  title: string;
+  startAt: string | null;
+  endAt: string | null;
 }
 
 export interface CanvasUser {
@@ -49,8 +78,19 @@ export interface CanvasAssignment {
     workflow_state?: string;
     missing?: boolean;
     late?: boolean;
+    excused?: boolean;
+    score?: number | null;
+    grade?: string | null;
     submitted_at?: string | null;
   };
+}
+
+export interface EnrollmentTerm {
+  id: number;
+  name: string;
+  startAt: string | null;
+  endAt: string | null;
+  courseCount: number;
 }
 
 export interface AssignmentContextItem {
@@ -68,6 +108,22 @@ export interface AssignmentContextItem {
   late: boolean;
   submitted: boolean;
   description: string | null;
+  score?: number | null;
+  grade?: string | null;
+  excused?: boolean;
+}
+
+export type MissingReason = "missing" | "overdue" | "zero";
+
+export interface MissingAssignmentItem extends AssignmentContextItem {
+  reasons: MissingReason[];
+  primaryReason: MissingReason;
+}
+
+export interface GpaSummaryContext {
+  unweighted: number | null;
+  weighted: number | null;
+  coursesIncluded: number;
 }
 
 export interface AssignmentAssistantContext {
@@ -77,6 +133,7 @@ export interface AssignmentAssistantContext {
   tomorrowDate: string;
   grades: CourseGrade[];
   assignments: AssignmentContextItem[];
+  gpaSummary?: GpaSummaryContext | null;
 }
 
 export interface CanvasPlannerPlannable {
@@ -121,6 +178,14 @@ export interface CourseGrade {
   currentGrade: string | null;
   gradesUrl: string | null;
   hidden: boolean;
+  termId?: number | null;
+  hasGradingPeriods?: boolean;
+}
+
+export interface GradesPageData {
+  user: { id: number; name: string };
+  timezone: string;
+  grades: CourseGrade[];
 }
 
 export interface DueTomorrowItem {

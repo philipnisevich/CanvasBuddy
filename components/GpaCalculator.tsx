@@ -1,19 +1,16 @@
 "use client";
 
 import { ChevronDown, ChevronUp } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import type { CourseGrade } from "@/lib/canvas/types";
+import { useApp } from "@/contexts/AppProvider";
 import {
   calculateGpa,
   formatGpa,
   getLevelLabels,
   type CourseLevel,
 } from "@/lib/gpa";
-import {
-  DEFAULT_GPA_PREFERENCES,
-  showWeightedGpa,
-  type GpaPreferences,
-} from "@/lib/gpa-preferences";
+import { showWeightedGpa } from "@/lib/gpa-preferences";
 import Link from "next/link";
 
 const LEVEL_STYLES: Record<CourseLevel, string> = {
@@ -27,23 +24,8 @@ interface GpaCalculatorProps {
 }
 
 export default function GpaCalculator({ grades }: GpaCalculatorProps) {
+  const { gpaPreferences: prefs } = useApp();
   const [showBreakdown, setShowBreakdown] = useState(false);
-  const [prefs, setPrefs] = useState<GpaPreferences>(DEFAULT_GPA_PREFERENCES);
-
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      const res = await fetch("/api/settings/gpa");
-      if (!res.ok || cancelled) return;
-      const data = await res.json();
-      if (!cancelled && data.preferences) {
-        setPrefs(data.preferences);
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, []);
 
   const levelLabels = useMemo(() => getLevelLabels(prefs), [prefs]);
   const result = useMemo(
