@@ -1,7 +1,6 @@
 "use client";
 
 import { AppGateShell } from "@/components/AppGate";
-import PageToolbar from "@/components/ui/PageToolbar";
 import AssignmentAssistant from "@/components/AssignmentAssistant";
 import { useApp } from "@/contexts/AppProvider";
 
@@ -18,12 +17,9 @@ export default function AiPageContent() {
       onLogout={gate.handleLogout}
       showNav
     >
-      <PageToolbar
-        label="Study helper"
-        title="AI assistant"
-        description="Ask about due dates, grades, assignments, and what's happening in your classes."
-      />
-      <AssignmentAssistant fullPage />
+      <div className="-mx-2 sm:mx-0">
+        <AssignmentAssistant fullPage />
+      </div>
     </AppGateShell>
   );
 }

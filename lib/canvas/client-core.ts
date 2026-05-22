@@ -68,3 +68,24 @@ export async function verifyCanvasToken(
 ): Promise<CanvasUser> {
   return fetchCanvasUser(baseUrl, accessToken);
 }
+
+export async function fetchCanvasJson<T>(
+  baseUrl: string,
+  path: string,
+  accessToken: string
+): Promise<T> {
+  const res = await fetch(`${baseUrl}${path}`, {
+    headers: { Authorization: `Bearer ${accessToken}` },
+    cache: "no-store",
+  });
+
+  if (!res.ok) {
+    const text = await res.text();
+    throw new CanvasApiError(
+      `Canvas API error (${res.status}): ${text.slice(0, 200)}`,
+      res.status
+    );
+  }
+
+  return res.json() as Promise<T>;
+}

@@ -6,7 +6,7 @@ A student dashboard that connects to Canvas and helps you stay on top of schoolw
 - **Grades** — scores and letter grades for active courses, plus unweighted/weighted GPA estimates
 - **Upcoming** — what’s due tomorrow and a configurable day-by-day horizon
 - **Missing** — assignments marked missing, overdue without submission, or scored zero
-- **AI** — study helper that answers questions about your classes, due dates, and grades (powered by Claude, with conversation context)
+- **AI** — study helper that searches your Canvas courses (syllabus, announcements, modules, assignments, and more) to answer questions (powered by Claude)
 
 ## For students
 
@@ -22,6 +22,8 @@ A student dashboard that connects to Canvas and helps you stay on top of schoolw
 3. Under **Approved Integrations**, click **+ New Access Token**.
 4. Name it (e.g. CanvasBuddy), create it, and copy the token into CanvasBuddy Settings.
 
+The token should be able to **read** your courses and course content (assignments, pages, announcements, modules, calendar). CanvasBuddy’s dashboard uses a small set of APIs; the **AI assistant** may call additional read endpoints as needed for each question.
+
 Revoke the token anytime in Canvas under **Settings → Approved Integrations**.
 
 ### Optional — Sign in with Canvas (OAuth)
@@ -36,11 +38,23 @@ Optional. Enables **Sign in with Canvas** so students can skip pasting tokens.
 
 1. In Canvas: **Admin → Developer Keys → + Developer Key** (API key).
 2. Set **Redirect URI** to your app’s callback URL, e.g. `https://your-app-domain.com/api/auth/canvas/callback`.
-3. Enable scopes (if your instance uses scoped keys):
+3. Enable scopes (if your instance uses scoped keys). **Dashboard** (minimum):
    - `url:GET|/api/v1/courses`
    - `url:GET|/api/v1/planner/items`
    - `url:GET|/api/v1/users/self`
-   - `url:GET|/api/v1/courses/:course_id/assignments` (assignments, missing work, and the AI helper)
+   - `url:GET|/api/v1/courses/:course_id/assignments`
+   
+   **AI agent** (add these for syllabus, search, announcements, pages, modules, calendar):
+   - `url:GET|/api/v1/courses/:course_id/search`
+   - `url:GET|/api/v1/courses/:course_id/discussion_topics`
+   - `url:GET|/api/v1/courses/:course_id/pages`
+   - `url:GET|/api/v1/courses/:course_id/pages/:url`
+   - `url:GET|/api/v1/courses/:course_id/modules`
+   - `url:GET|/api/v1/courses/:course_id/modules/:module_id/items`
+   - `url:GET|/api/v1/courses/:course_id/front_page`
+   - `url:GET|/api/v1/calendar_events`
+   
+   Personal access tokens (Settings) usually include full read access without listing each scope.
 4. Enable the key and copy **Client ID** and **Client Secret**.
 5. Configure environment variables (see below).
 
@@ -118,16 +132,17 @@ Optional. Enables **Sign in with Canvas** so students can skip pasting tokens.
 | **Grades** | Active course scores and GPA | `GET /api/v1/courses` with grade includes |
 | **Upcoming** | Due tomorrow + assignments in your horizon | Planner + per-course assignments |
 | **Missing** | Missing, overdue, or zero-scored work (lookback window) | Per-course assignments |
-| **AI** | Chat about your schedule and classes | Same assignment/grade context sent to Claude |
+| **AI** | Prompt-driven search across Canvas | Agent calls allowlisted Canvas APIs per question (courses, search, syllabus, announcements, modules, pages, assignments, planner, calendar, grades) |
 
-Canvas tokens stay on the server. The AI route receives a summarized snapshot of grades and assignments (and optional GPA summary); it does not send your raw token to Anthropic.
+Canvas tokens stay on the server. The AI agent fetches live data via tools; only **text results** are sent to Anthropic (never your token).
 
 ### Example AI questions
 
 - “When is my chem project due?”
 - “What do I have due tomorrow?”
+- “What is my English syllabus?”
+- “When is my calculus potluck?”
 - “Which class has my lowest grade?”
-- “Describe what’s going on in my English class and how I should approach the next assignment.”
 
 ## Scripts
 

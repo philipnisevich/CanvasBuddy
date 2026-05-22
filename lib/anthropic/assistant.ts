@@ -1,3 +1,7 @@
+/**
+ * Legacy single-shot assistant (pre-built Canvas snapshot).
+ * Production AI uses lib/anthropic/canvas-agent.ts (tool-use agent).
+ */
 import Anthropic from "@anthropic-ai/sdk";
 import type {
   AssignmentAssistantContext,
