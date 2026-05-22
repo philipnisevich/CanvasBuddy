@@ -46,7 +46,7 @@ export function getSupabaseServiceRoleEnvError(): string | null {
 
   const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY?.trim();
   if (!serviceRoleKey) {
-    return "Supabase service role key is missing. Add SUPABASE_SERVICE_ROLE_KEY to .env.local (Supabase Dashboard: Project Settings, API, service_role secret).";
+    return "Supabase service role key is missing. Add SUPABASE_SERVICE_ROLE_KEY to .env.local (Supabase Dashboard: Project Settings, API, service_role secret), then restart the dev server (stop npm run dev and run it again).";
   }
 
   const asciiError = getAsciiEnvVarError("SUPABASE_SERVICE_ROLE_KEY", serviceRoleKey);
