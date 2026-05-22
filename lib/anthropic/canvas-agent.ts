@@ -4,6 +4,7 @@ import {
   createExecutorState,
   executeCanvasTool,
 } from "@/lib/canvas/agent/executor";
+import { filterSourcesForAnswer } from "@/lib/canvas/agent/source-filter";
 import { CANVAS_AGENT_TOOLS } from "@/lib/canvas/agent/tools";
 import type { CanvasAgentSource } from "@/lib/canvas/agent/types";
 import type { GpaSummaryContext } from "@/lib/canvas/types";
@@ -29,6 +30,7 @@ Playbook:
 
 Rules:
 - Use ONLY data returned by tools. If you searched and found nothing, say so clearly.
+- When a specific announcement, assignment, or page supports your answer, mention its exact title (as in tool results) or paste its Canvas link so sources stay traceable.
 - Cite course names, due dates, and Canvas links when tools return them.
 - Today and tomorrow are in the student's timezone (shown by list_active_courses).
 - Keep answers concise, friendly, and actionable. Format with Markdown (**bold**, bullet lists, short headings when useful).
@@ -115,6 +117,7 @@ export async function runCanvasAgent(opts: {
   ];
 
   let lastText = "";
+  let sourcesFromLastToolRound: CanvasAgentSource[] = [];
 
   for (let turn = 0; turn < MAX_AGENT_TURNS; turn++) {
     const response = await client.messages.create({
@@ -138,6 +141,7 @@ export async function runCanvasAgent(opts: {
 
       messages.push({ role: "assistant", content: response.content });
 
+      const sourceCountBeforeRound = executorState.sources.length;
       const toolResults: Anthropic.ToolResultBlockParam[] = [];
       for (const block of toolUseBlocks) {
         const { content, isError } = await executeCanvasTool(
@@ -153,6 +157,9 @@ export async function runCanvasAgent(opts: {
         });
       }
 
+      sourcesFromLastToolRound = executorState.sources.slice(
+        sourceCountBeforeRound
+      );
       messages.push({ role: "user", content: toolResults });
       continue;
     }
@@ -166,9 +173,14 @@ export async function runCanvasAgent(opts: {
       "I couldn't complete a search on Canvas. Try rephrasing with a course name, or check your connection in Settings.";
   }
 
+  let sources = filterSourcesForAnswer(lastText, sourcesFromLastToolRound);
+  if (sources.length === 0) {
+    sources = filterSourcesForAnswer(lastText, executorState.sources);
+  }
+
   return {
     answer: lastText,
-    sources: executorState.sources.slice(0, 15),
+    sources,
   };
 }
 
