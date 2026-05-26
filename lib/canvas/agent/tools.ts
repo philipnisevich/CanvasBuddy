@@ -162,6 +162,22 @@ export const CANVAS_AGENT_TOOLS: Anthropic.Tool[] = [
     },
   },
   {
+    name: "get_assignment_submission",
+    description:
+      "Get the student's grade/score and submission details for a single assignment. Returns score, points_possible, grade, late/missing flags, submitted_at, and grader comments. Use after identifying the assignment_id from list_assignments.",
+    input_schema: {
+      type: "object" as const,
+      properties: {
+        course_id: { type: "number", description: "Canvas course id" },
+        assignment_id: {
+          type: "number",
+          description: "Canvas assignment id (from list_assignments)",
+        },
+      },
+      required: ["course_id", "assignment_id"],
+    },
+  },
+  {
     name: "get_grades_summary",
     description:
       "Current grades for all active courses plus GPA estimate. Use for grade comparisons without fetching every assignment.",

@@ -283,6 +283,19 @@ async function toolListAssignments(
     const status = sub?.workflow_state ?? "unsubmitted";
     const missing = sub?.missing ? " missing" : "";
     const late = sub?.late ? " late" : "";
+    const excused = sub?.excused ? " excused" : "";
+    const pts = a.points_possible != null ? `/${a.points_possible}` : "";
+    let scorePart = "";
+    if (sub?.excused) {
+      scorePart = " | score: excused";
+    } else if (sub?.score != null) {
+      scorePart = ` | score: ${sub.score}${pts}`;
+      if (sub.grade && sub.grade !== String(sub.score)) {
+        scorePart += ` (${sub.grade})`;
+      }
+    } else if (a.points_possible != null) {
+      scorePart = ` | points_possible: ${a.points_possible}`;
+    }
     if (a.html_url) {
       recordSource(state, {
         type: "assignment",
@@ -291,7 +304,7 @@ async function toolListAssignments(
       });
     }
     const desc = sanitizeHtmlField(a.description);
-    return `- ${a.name} | due: ${due} | status: ${status}${missing}${late}${desc ? `\n  instructions: ${desc.slice(0, 400)}` : ""}`;
+    return `- id=${a.id} ${a.name} | due: ${due} | status: ${status}${missing}${late}${excused}${scorePart}${desc ? `\n  instructions: ${desc.slice(0, 400)}` : ""}`;
   });
 
   return {
@@ -545,6 +558,104 @@ async function toolGetFrontPage(
   };
 }
 
+interface CanvasSubmissionDetail {
+  id?: number;
+  score?: number | null;
+  grade?: string | null;
+  entered_score?: number | null;
+  entered_grade?: string | null;
+  excused?: boolean;
+  late?: boolean;
+  missing?: boolean;
+  workflow_state?: string;
+  submitted_at?: string | null;
+  graded_at?: string | null;
+  attempt?: number | null;
+  submission_comments?: Array<{
+    id?: number;
+    comment?: string;
+    author_name?: string;
+    created_at?: string;
+  }>;
+}
+
+async function toolGetAssignmentSubmission(
+  state: AgentExecutorState,
+  courseId: number,
+  assignmentId: number
+): Promise<ToolExecutionResult> {
+  const denied = assertCourseAllowed(state, courseId);
+  if (denied) return { content: denied, isError: true };
+
+  if (!Number.isFinite(assignmentId) || assignmentId <= 0) {
+    return { content: "Invalid assignment_id.", isError: true };
+  }
+
+  const assignment = await fetchCanvasJson<CanvasAssignment>(
+    state.baseUrl,
+    `/api/v1/courses/${courseId}/assignments/${assignmentId}`,
+    state.accessToken
+  );
+
+  const sub = await fetchCanvasJson<CanvasSubmissionDetail>(
+    state.baseUrl,
+    `/api/v1/courses/${courseId}/assignments/${assignmentId}/submissions/self?include[]=submission_comments`,
+    state.accessToken
+  );
+
+  if (assignment.html_url) {
+    recordSource(state, {
+      type: "assignment",
+      title: assignment.name,
+      url: assignment.html_url,
+    });
+  }
+
+  const lines: string[] = [
+    `Assignment: ${assignment.name}`,
+    `Due: ${formatDueAt(assignment.due_at, state.timezone)}`,
+    `Points possible: ${assignment.points_possible ?? "N/A"}`,
+    `Status: ${sub.workflow_state ?? "unknown"}`,
+  ];
+
+  if (sub.excused) {
+    lines.push("Score: excused");
+  } else if (sub.score != null) {
+    lines.push(`Score: ${sub.score}/${assignment.points_possible ?? "?"}`);
+    if (sub.grade && sub.grade !== String(sub.score)) {
+      lines.push(`Grade: ${sub.grade}`);
+    }
+  } else {
+    lines.push("Score: not yet graded");
+  }
+
+  if (sub.late) lines.push("Late: yes");
+  if (sub.missing) lines.push("Missing: yes");
+  if (sub.submitted_at) {
+    lines.push(`Submitted: ${formatDueAt(sub.submitted_at, state.timezone)}`);
+  }
+  if (sub.graded_at) {
+    lines.push(`Graded: ${formatDueAt(sub.graded_at, state.timezone)}`);
+  }
+  if (sub.attempt != null) {
+    lines.push(`Attempt: ${sub.attempt}`);
+  }
+
+  const comments = sub.submission_comments?.filter((c) => c.comment?.trim());
+  if (comments && comments.length > 0) {
+    lines.push("", "Comments:");
+    for (const c of comments.slice(0, 10)) {
+      const author = c.author_name ?? "Unknown";
+      const date = c.created_at
+        ? formatDueAt(c.created_at, state.timezone)
+        : "";
+      lines.push(`  - ${author}${date ? ` (${date})` : ""}: ${c.comment!.slice(0, 500)}`);
+    }
+  }
+
+  return { content: truncateForModel(lines.join("\n")) };
+}
+
 async function toolGetGradesSummary(
   state: AgentExecutorState
 ): Promise<ToolExecutionResult> {
@@ -778,6 +889,13 @@ export async function executeCanvasTool(
         const cid = parseCourseId(input.course_id);
         if (cid == null) return { content: "Invalid course_id.", isError: true };
         return await toolGetFrontPage(state, cid);
+      }
+      case "get_assignment_submission": {
+        const cid = parseCourseId(input.course_id);
+        if (cid == null) return { content: "Invalid course_id.", isError: true };
+        const aid = Number(input.assignment_id);
+        if (!Number.isFinite(aid) || aid <= 0) return { content: "Invalid assignment_id.", isError: true };
+        return await toolGetAssignmentSubmission(state, cid, aid);
       }
       case "get_grades_summary":
         return await toolGetGradesSummary(state);
