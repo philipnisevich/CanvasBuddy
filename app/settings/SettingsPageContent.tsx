@@ -1,10 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import AppShell, { AppShellCentered } from "@/components/ui/AppShell";
-import OnboardingSteps from "@/components/ui/OnboardingSteps";
 import CanvasCredentialsForm from "@/components/CanvasCredentialsForm";
 import SupabaseSetupBanner from "@/components/SupabaseSetupBanner";
 import SettingsShell, {
@@ -13,6 +12,7 @@ import SettingsShell, {
 import AccountPasswordSection from "@/components/settings/AccountPasswordSection";
 import GpaPreferencesForm from "@/components/settings/GpaPreferencesForm";
 import { useApp } from "@/contexts/AppProvider";
+import { useSettingsCache } from "@/contexts/SettingsCache";
 
 type PageState = "loading" | "unauthenticated" | "ready";
 
@@ -27,6 +27,7 @@ function parseSection(value: string | null): SettingsSection {
 
 export default function SettingsPageContent() {
   const { gate } = useApp();
+  const cache = useSettingsCache();
   const searchParams = useSearchParams();
   const [state, setState] = useState<PageState>("loading");
   const [email, setEmail] = useState<string | null>(null);
@@ -47,11 +48,31 @@ export default function SettingsPageContent() {
   const [recoveryMode, setRecoveryMode] = useState(
     () => searchParams.get("recovery") === "1"
   );
+  const hydratedFromCacheRef = useRef(false);
 
   useEffect(() => {
     setSection(parseSection(searchParams.get("tab")));
     setRecoveryMode(searchParams.get("recovery") === "1");
   }, [searchParams]);
+
+  // Hydrate from background cache if available
+  useEffect(() => {
+    if (hydratedFromCacheRef.current) return;
+    if (cache.status === "ready" && cache.data) {
+      hydratedFromCacheRef.current = true;
+      setEmail(cache.data.email);
+      setCanvasBaseUrl(cache.data.canvasBaseUrl);
+      setHasCredentials(cache.data.hasCredentials);
+      setDbReady(cache.data.dbReady);
+      setGpaDbReady(cache.data.gpaDbReady);
+      setDbIssue(cache.data.dbIssue);
+      setGpaDbIssue(cache.data.gpaDbIssue);
+      setState("ready");
+    } else if (cache.status === "unauthenticated") {
+      hydratedFromCacheRef.current = true;
+      setState("unauthenticated");
+    }
+  }, [cache.status, cache.data]);
 
   function clearRecoveryParam() {
     setRecoveryMode(false);
@@ -113,9 +134,12 @@ export default function SettingsPageContent() {
     }
   }, [gate.checkAuth]);
 
+  // Only fetch fresh if cache didn't provide data
   useEffect(() => {
+    if (cache.status === "ready" || cache.status === "unauthenticated") return;
+    if (cache.status === "loading") return;
     loadSettings();
-  }, [loadSettings]);
+  }, [cache.status, loadSettings]);
 
   async function handleDisconnect() {
     setDisconnecting(true);
@@ -123,6 +147,7 @@ export default function SettingsPageContent() {
       await fetch("/api/settings/canvas", { method: "DELETE" });
       setHasCredentials(false);
       setCanvasBaseUrl("");
+      cache.invalidate();
       await gate.checkAuth({ silent: true });
     } finally {
       setDisconnecting(false);
@@ -170,54 +195,47 @@ export default function SettingsPageContent() {
         </Link>
       }
     >
-      <div className="mb-8">
+      <div className="mb-6">
         <h1 className="text-2xl font-semibold">Settings</h1>
-        <p className="mt-2 text-sm text-[var(--muted)]">
-          Connect Canvas, manage your account, and align GPA calculations with
-          your school.
-        </p>
       </div>
 
       {!dbReady && section === "canvas" && (
-        <div className="mb-8">
+        <div className="mb-6">
           <SupabaseSetupBanner issue={dbIssue} target="canvas" />
         </div>
       )}
 
       {!gpaDbReady && section === "gpa" && (
-        <div className="mb-8">
+        <div className="mb-6">
           <SupabaseSetupBanner issue={gpaDbIssue} target="gpa" />
         </div>
       )}
 
-      <SettingsShell active={section} onNavigate={navigate}>
-        {section === "canvas" && (
-          <>
-            <OnboardingSteps current={hasCredentials ? 3 : 2} />
-            <section className="cb-card mt-6 overflow-hidden">
-              <div className="border-b border-[var(--border)] bg-[var(--card-muted)] px-6 py-4">
-                <p className="cb-section-label">Integration</p>
-                <h2 className="text-lg font-semibold">Canvas</h2>
-                {hasCredentials ? (
-                  <p className="mt-2 flex items-center gap-2 text-sm text-[var(--success)]">
-                    <span
-                      className="inline-block h-2 w-2 rounded-full bg-[var(--success)]"
-                      aria-hidden
-                    />
-                    Connected{canvasBaseUrl ? ` to ${canvasBaseUrl}` : ""}
-                  </p>
-                ) : (
-                  <p className="mt-2 text-sm text-[var(--muted)]">
-                    Add your Canvas URL and token to unlock your dashboard.
-                  </p>
-                )}
-              </div>
+      <div className="cb-card overflow-hidden">
+        <SettingsShell active={section} onNavigate={navigate}>
+          {section === "canvas" && (
+            <div>
+              <h2 className="text-lg font-semibold">Canvas integration</h2>
+              {hasCredentials ? (
+                <p className="mt-1 flex items-center gap-2 text-sm text-[var(--success)]">
+                  <span
+                    className="inline-block h-2 w-2 rounded-full bg-[var(--success)]"
+                    aria-hidden
+                  />
+                  Connected{canvasBaseUrl ? ` to ${canvasBaseUrl}` : ""}
+                </p>
+              ) : (
+                <p className="mt-1 text-sm text-[var(--muted)]">
+                  Add your Canvas URL and token to unlock your dashboard.
+                </p>
+              )}
 
-              <div className="px-6 py-6">
+              <div className="mt-6">
                 <CanvasCredentialsForm
                   initialCanvasBaseUrl={canvasBaseUrl}
                   onSuccess={async () => {
                     setHasCredentials(true);
+                    cache.invalidate();
                     await loadSettings();
                     await gate.checkAuth({ silent: true });
                   }}
@@ -244,59 +262,56 @@ export default function SettingsPageContent() {
                   </div>
                 )}
               </div>
-            </section>
-          </>
-        )}
-
-        {section === "account" && (
-          <section className="cb-card overflow-hidden">
-            <div className="border-b border-[var(--border)] bg-[var(--card-muted)] px-6 py-4">
-              <p className="cb-section-label">Account</p>
-              <h2 className="text-lg font-semibold">Your profile</h2>
             </div>
-            <div className="space-y-6 px-6 py-6">
-              <dl className="grid gap-4 sm:grid-cols-[8rem_1fr]">
-                <dt className="text-sm font-semibold text-[var(--muted)]">
-                  Email
-                </dt>
-                <dd className="text-sm font-medium">{email ?? "—"}</dd>
-              </dl>
-              <p className="text-sm text-[var(--muted)]">
-                CanvasBuddy uses Supabase for sign-in. Your Canvas token is
-                stored separately and never shared with other users.
+          )}
+
+          {section === "account" && (
+            <div>
+              <h2 className="text-lg font-semibold">Account</h2>
+              <p className="mt-1 text-sm text-[var(--muted)]">
+                Manage your profile, password, and session.
               </p>
 
-              {email && (
-                <AccountPasswordSection
-                  email={email}
-                  recoveryMode={recoveryMode}
-                  onRecoveryComplete={clearRecoveryParam}
-                />
-              )}
+              <div className="mt-6 space-y-6">
+                <dl className="grid gap-4 sm:grid-cols-[8rem_1fr]">
+                  <dt className="text-sm font-semibold text-[var(--muted)]">
+                    Email
+                  </dt>
+                  <dd className="text-sm font-medium">{email ?? "—"}</dd>
+                </dl>
 
-              <div className="border-t border-[var(--border)] pt-6">
-                <div className="cb-settings-section-head">
-                  <div>
-                    <h3 className="text-sm font-semibold">Session</h3>
-                    <p className="mt-1 text-sm text-[var(--muted)]">
-                      Sign out on this device. You can sign back in anytime.
-                    </p>
+                {email && (
+                  <AccountPasswordSection
+                    email={email}
+                    recoveryMode={recoveryMode}
+                    onRecoveryComplete={clearRecoveryParam}
+                  />
+                )}
+
+                <div className="border-t border-[var(--border)] pt-6">
+                  <div className="cb-settings-section-head">
+                    <div>
+                      <h3 className="text-sm font-semibold">Session</h3>
+                      <p className="mt-1 text-sm text-[var(--muted)]">
+                        Sign out on this device. You can sign back in anytime.
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={handleLogout}
+                      className="cb-btn-secondary shrink-0"
+                    >
+                      Sign out
+                    </button>
                   </div>
-                  <button
-                    type="button"
-                    onClick={handleLogout}
-                    className="cb-btn-secondary shrink-0"
-                  >
-                    Sign out
-                  </button>
                 </div>
               </div>
             </div>
-          </section>
-        )}
+          )}
 
-        {section === "gpa" && <GpaPreferencesForm />}
-      </SettingsShell>
+          {section === "gpa" && <GpaPreferencesForm />}
+        </SettingsShell>
+      </div>
     </AppShell>
   );
 }

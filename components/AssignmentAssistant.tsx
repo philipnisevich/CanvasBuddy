@@ -2,6 +2,7 @@
 
 import ChatMarkdown from "@/components/assistant/ChatMarkdown";
 import Alert from "@/components/ui/Alert";
+import { useChat } from "@/contexts/ChatProvider";
 import {
   ArrowUp,
   Bot,
@@ -19,24 +20,12 @@ const EXAMPLE_PROMPTS = [
   "Which class has my lowest grade?",
 ];
 
-interface CanvasSource {
-  type: string;
-  title: string;
-  url: string;
-}
-
-interface ChatMessage {
-  role: "user" | "assistant";
-  content: string;
-  sources?: CanvasSource[];
-}
-
 export default function AssignmentAssistant({
   fullPage = false,
 }: {
   fullPage?: boolean;
 }) {
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const { messages, setMessages } = useChat();
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
