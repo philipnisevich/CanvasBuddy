@@ -47,7 +47,6 @@ export default function UpcomingPageContent() {
       showNav
     >
       <PageToolbar
-        label="Planner"
         title="Upcoming"
         description="Due tomorrow plus assignments in the next few days."
         actions={

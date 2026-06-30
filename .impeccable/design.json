@@ -1,0 +1,139 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-06-30T00:00:00Z",
+  "title": "Design System: CanvasBuddy",
+  "extensions": {
+    "colorMeta": {
+      "canvas-red": { "role": "primary", "displayName": "Canvas Red", "canonical": "#e03e26", "tonalRamp": ["#2e0c07", "#5a160d", "#871f14", "#a82b1f", "#c93424", "#e03e26", "#ec6655", "#f7b6ac"] },
+      "canvas-blue": { "role": "secondary", "displayName": "Canvas Blue", "canonical": "#2d7dd2", "tonalRamp": ["#0a1c33", "#13335c", "#1c4a86", "#256bb8", "#2d7dd2", "#5b9bdf", "#8fbce9", "#d2e4f6"] },
+      "secondary-green": { "role": "secondary", "displayName": "Sage Green", "canonical": "#6b9e5a", "tonalRamp": ["#16200f", "#27381b", "#3a5429", "#4d7036", "#5b8f4a", "#6b9e5a", "#97bf89", "#d3e4cb"] },
+      "background": { "role": "neutral", "displayName": "Slate Paper", "canonical": "#f0f4f8", "tonalRamp": ["#2d3b45", "#475662", "#647281", "#8b9aab", "#c7d1db", "#e8eef4", "#f0f4f8", "#fbfcfd"] },
+      "ink": { "role": "neutral", "displayName": "Deep Slate Ink", "canonical": "#2d3b45", "tonalRamp": ["#13191e", "#1f2a31", "#2d3b45", "#43525f", "#5c6b7a", "#8b9aab", "#c7d1db", "#e8eef4"] }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Display", "purpose": "Page titles — the single largest label on a screen (Source Serif 4 700)." },
+      "headline": { "displayName": "Headline", "purpose": "Major in-page section headings (Source Serif 4 700)." },
+      "title": { "displayName": "Title", "purpose": "Card titles and panel headers (Source Serif 4 700)." },
+      "metric": { "displayName": "Metric", "purpose": "Large numeric readouts — GPA, counts — in the serif's tabular lining figures (Source Serif 4 700, tabular-nums)." },
+      "body": { "displayName": "Body", "purpose": "All reading text, 65–75ch (Source Sans 3 400/500, 1.6 line-height)." },
+      "label": { "displayName": "Section Label", "purpose": "Sparing uppercase red micro-tag, one per section (Source Sans 3 700, 0.08em)." }
+    },
+    "shadows": [
+      { "name": "clay", "value": "0 1px 2px rgb(45 59 69 / 0.06), 0 4px 14px rgb(45 59 69 / 0.07)", "purpose": "Default resting elevation for cards and panels." },
+      { "name": "clay-sm", "value": "0 1px 2px rgb(45 59 69 / 0.05), 0 2px 8px rgb(45 59 69 / 0.05)", "purpose": "Flatter lift for buttons, chips, inputs, muted cards." },
+      { "name": "clay-hover", "value": "0 2px 4px rgb(45 59 69 / 0.07), 0 8px 20px rgb(45 59 69 / 0.09)", "purpose": "Interactive card hover lift, paired with a border-strong darken." },
+      { "name": "clay-pressed", "value": "inset 0 2px 4px rgb(45 59 69 / 0.08)", "purpose": "Pressed state of primary buttons." },
+      { "name": "focus-ring", "value": "0 0 0 3px rgb(224 62 38 / 0.18)", "purpose": "Soft Canvas-red glow ring on input/composer focus." }
+    ],
+    "motion": [
+      { "name": "transition-ui", "value": "200ms ease-out", "purpose": "Default easing for all state transitions (background, border, shadow, color)." }
+    ],
+    "breakpoints": [
+      { "name": "content-max", "value": "72rem" },
+      { "name": "chat-max", "value": "48rem" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Solid Canvas-red call to action for the single most important action on a view.",
+      "html": "<button class=\"ds-btn-primary\">Connect Canvas</button>",
+      "css": ".ds-btn-primary { display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; cursor: pointer; border-radius: 0.5rem; border: 2px solid #a82b1f; background: #e03e26; padding: 0.625rem 1.25rem; font-family: 'Source Sans 3', system-ui, sans-serif; font-size: 0.875rem; font-weight: 600; color: #fff; box-shadow: 0 1px 3px rgb(168 43 31 / 0.25); transition: background 200ms ease-out, box-shadow 200ms ease-out; } .ds-btn-primary:hover { background: #c93424; } .ds-btn-primary:focus-visible { outline: 2px solid #e03e26; outline-offset: 2px; } .ds-btn-primary:active { box-shadow: inset 0 2px 4px rgb(45 59 69 / 0.08); transform: translateY(1px); }"
+    },
+    {
+      "name": "Secondary Button",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "Red-outlined action for secondary emphasis on a light surface.",
+      "html": "<button class=\"ds-btn-secondary\">View grades</button>",
+      "css": ".ds-btn-secondary { display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; cursor: pointer; border-radius: 0.5rem; border: 2px solid #e03e26; background: #fff; padding: 0.5rem 1rem; font-family: 'Source Sans 3', system-ui, sans-serif; font-size: 0.875rem; font-weight: 600; color: #e03e26; box-shadow: 0 1px 2px rgb(45 59 69 / 0.05), 0 2px 8px rgb(45 59 69 / 0.05); transition: background 200ms ease-out, border-color 200ms ease-out, color 200ms ease-out; } .ds-btn-secondary:hover { background: #fdecea; border-color: #c93424; color: #c93424; } .ds-btn-secondary:focus-visible { outline: 2px solid #e03e26; outline-offset: 2px; }"
+    },
+    {
+      "name": "Ghost Button",
+      "kind": "button",
+      "refersTo": "button-ghost",
+      "description": "Quiet neutral-bordered action — the default low-emphasis button on light surfaces.",
+      "html": "<button class=\"ds-btn-ghost\">Cancel</button>",
+      "css": ".ds-btn-ghost { display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; cursor: pointer; border-radius: 0.5rem; border: 2px solid #c7d1db; background: #fff; padding: 0.5rem 1rem; font-family: 'Source Sans 3', system-ui, sans-serif; font-size: 0.875rem; font-weight: 600; color: #2d3b45; box-shadow: 0 1px 2px rgb(45 59 69 / 0.05), 0 2px 8px rgb(45 59 69 / 0.05); transition: background 200ms ease-out, border-color 200ms ease-out; } .ds-btn-ghost:hover { border-color: #8b9aab; background: #e8eef4; } .ds-btn-ghost:focus-visible { outline: 2px solid #e03e26; outline-offset: 2px; }"
+    },
+    {
+      "name": "Filter Chip",
+      "kind": "chip",
+      "refersTo": "chip",
+      "description": "Toggleable filter pill; active state washes soft-red with a red border.",
+      "html": "<button class=\"ds-chip\">All courses</button><button class=\"ds-chip ds-chip--active\">Missing</button>",
+      "css": ".ds-chip { cursor: pointer; border-radius: 0.5rem; border: 2px solid #c7d1db; background: #fff; padding: 0.375rem 0.75rem; font-family: 'Source Sans 3', system-ui, sans-serif; font-size: 0.875rem; font-weight: 600; color: #2d3b45; transition: border-color 200ms ease-out, background 200ms ease-out, color 200ms ease-out; } .ds-chip:hover { border-color: #8b9aab; background: #e8eef4; } .ds-chip:focus-visible { outline: 2px solid #e03e26; outline-offset: 2px; } .ds-chip--active { border-color: #e03e26; background: #fdecea; color: #a82b1f; }"
+    },
+    {
+      "name": "Text Input",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "Recessed field with a red focus ring matching the global focus language.",
+      "html": "<input class=\"ds-input\" type=\"text\" placeholder=\"Search assignments…\" />",
+      "css": ".ds-input { width: 100%; box-sizing: border-box; cursor: text; border-radius: 0.5rem; border: 2px solid #c7d1db; background: #fff; padding: 0.75rem 1rem; font-family: 'Source Sans 3', system-ui, sans-serif; font-size: 1rem; color: #2d3b45; outline: none; box-shadow: inset 0 1px 2px rgb(45 59 69 / 0.04); transition: border-color 200ms ease-out, box-shadow 200ms ease-out; } .ds-input::placeholder { color: #5c6b7a; opacity: 0.8; } .ds-input:focus { border-color: #e03e26; box-shadow: inset 0 1px 2px rgb(45 59 69 / 0.04), 0 0 0 3px rgb(224 62 38 / 0.18); }"
+    },
+    {
+      "name": "Card",
+      "kind": "card",
+      "refersTo": "card",
+      "description": "Default white surface with 2px border and resting clay shadow; interactive variant lifts on hover.",
+      "html": "<div class=\"ds-card\"><span class=\"ds-section-label\">Current grade</span><h3 class=\"ds-card-title\">Biology 101</h3><p class=\"ds-card-body\">A− · 91.4% · 2 assignments due this week</p></div>",
+      "css": ".ds-card { border-radius: 0.625rem; border: 2px solid #c7d1db; background: #fff; box-shadow: 0 1px 2px rgb(45 59 69 / 0.06), 0 4px 14px rgb(45 59 69 / 0.07); padding: 1.5rem; transition: box-shadow 200ms ease-out, border-color 200ms ease-out; cursor: pointer; } .ds-card:hover { border-color: #8b9aab; box-shadow: 0 2px 4px rgb(45 59 69 / 0.07), 0 8px 20px rgb(45 59 69 / 0.09); } .ds-section-label { display: block; font-family: 'Source Sans 3', system-ui, sans-serif; font-size: 0.6875rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #e03e26; } .ds-card-title { margin: 0.35rem 0 0.5rem; font-family: 'Source Serif 4', Georgia, serif; font-size: 1.125rem; font-weight: 700; line-height: 1.3; letter-spacing: -0.005em; color: #2d3b45; } .ds-card-body { margin: 0; font-family: 'Source Sans 3', system-ui, sans-serif; font-size: 1rem; line-height: 1.6; color: #5c6b7a; }"
+    },
+    {
+      "name": "Global Nav Bar",
+      "kind": "nav",
+      "refersTo": "nav",
+      "description": "Solid dark-slate bar with a 3px Canvas-red underline — no glass, no blur.",
+      "html": "<nav class=\"ds-nav\"><div class=\"ds-nav-inner\"><span class=\"ds-nav-brand\">CanvasBuddy</span><div class=\"ds-nav-links\"><a class=\"ds-nav-link ds-nav-link--active\">Home</a><a class=\"ds-nav-link\">Grades</a><a class=\"ds-nav-link\">Upcoming</a></div></div></nav>",
+      "css": ".ds-nav { border-bottom: 3px solid #e03e26; background: #2d3b45; box-shadow: 0 2px 8px rgb(45 59 69 / 0.15); } .ds-nav-inner { display: flex; align-items: center; justify-content: space-between; gap: 1rem; max-width: 72rem; margin: 0 auto; padding: 0.875rem 1.25rem; } .ds-nav-brand { font-family: 'Source Serif 4', Georgia, serif; font-weight: 700; font-size: 1.125rem; letter-spacing: -0.005em; color: #fff; } .ds-nav-links { display: flex; gap: 0.25rem; } .ds-nav-link { cursor: pointer; border-radius: 0.5rem; padding: 0.5rem 0.875rem; font-family: 'Source Sans 3', system-ui, sans-serif; font-size: 0.875rem; font-weight: 600; color: #aeb5bb; transition: background 200ms ease-out, color 200ms ease-out; } .ds-nav-link:hover { background: rgb(255 255 255 / 0.08); color: #fff; } .ds-nav-link--active { background: rgb(255 255 255 / 0.12); color: #fff; }"
+    },
+    {
+      "name": "Chat Send Button",
+      "kind": "custom",
+      "refersTo": "button-primary",
+      "description": "Circular Canvas-red send control inside the AI composer pill.",
+      "html": "<button class=\"ds-chat-send\" aria-label=\"Send\"><svg width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M22 2 11 13\"/><path d=\"M22 2 15 22 11 13 2 9 22 2z\"/></svg></button>",
+      "css": ".ds-chat-send { display: flex; align-items: center; justify-content: center; width: 2.25rem; height: 2.25rem; flex-shrink: 0; border: none; border-radius: 9999px; background: #e03e26; color: #fff; cursor: pointer; transition: background 200ms ease-out, opacity 200ms ease-out; } .ds-chat-send:hover { background: #c93424; } .ds-chat-send:focus-visible { outline: 2px solid #e03e26; outline-offset: 2px; } .ds-chat-send:disabled { opacity: 0.45; cursor: not-allowed; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Clear Ledger",
+    "overview": "CanvasBuddy presents a student's grades, deadlines, and missing work the way a trustworthy ledger does: calmly, exactly, and without editorializing. The surface gets out of the way so the numbers carry the meaning. It borrows Canvas's signature red so students feel continuity with the system it reads from, but it is deliberately lighter, faster, and less cluttered than Canvas itself. The palette is a cool slate-and-paper neutral field with Canvas red reserved almost entirely for action and emphasis; type pairs a scholarly serif (Source Serif 4 headings and large metric figures) against a clean humanist sans (Source Sans 3 body and UI), contrasting on silhouette for ledger-like credibility. Depth is a soft two-layer clay shadow paired with a 2px border — tactile, never plastic. It reads as a credible academic tool a student trusts with their GPA.",
+    "keyCharacteristics": [
+      "Cool slate-and-paper neutral field; Canvas red strictly for action and emphasis.",
+      "Scholarly serif headings (Source Serif 4) against a clean humanist sans body (Source Sans 3).",
+      "Soft two-layer clay shadows + 2px borders — grounded, never plastic.",
+      "Calm by default; stakes surfaced honestly, never alarmingly.",
+      "Standard, familiar product affordances — the tool disappears into the task."
+    ],
+    "rules": [
+      { "name": "The Scalpel Rule", "body": "Canvas red is for action and genuine stakes only — primary actions, the current selection, focus, and real danger. It is never decoration and never a section divider. If a screen is more than ~10% red, pull it back to neutral.", "section": "colors" },
+      { "name": "The Native-Link Rule", "body": "Links are Canvas Blue, never red. Red is 'do something'; blue is 'go somewhere.' Never swap them.", "section": "colors" },
+      { "name": "The Serif-Heads, Sans-Reads Rule", "body": "Source Serif 4 owns headings, titles, and large metric figures; Source Sans 3 owns body, labels, buttons, and dense UI. Never set running body text in the serif or a page title in the sans — the silhouette swap is the hierarchy.", "section": "typography" },
+      { "name": "The One Red Label Rule", "body": "The uppercase red section label is a deliberate, sparing tag — at most one per logical section. Do not scatter it as a decorative eyebrow.", "section": "typography" },
+      { "name": "The Border-Carries-Structure Rule", "body": "Every elevated surface gets a 2px border and a clay shadow — never a shadow alone. A borderless floating card looks unfinished on the cool paper field.", "section": "elevation" },
+      { "name": "The Depth-Is-Feedback Rule", "body": "Resting elevation is quiet and uniform. Reserve the change in depth (hover lift, pressed inset) for interaction, so motion in the shadow always means 'you touched something.'", "section": "elevation" }
+    ],
+    "dos": [
+      "Do keep Canvas red for action and genuine stakes only — aim for ≤10% red coverage on any screen.",
+      "Do use Canvas Blue for links and Canvas Red for actions — never swap them.",
+      "Do pair every elevated surface with a 2px border and a clay shadow; let the border carry structure.",
+      "Do set headings, titles, and large metric figures in Source Serif 4, and all body/labels/UI in Source Sans 3 — the serif/sans silhouette swap is the hierarchy.",
+      "Do reserve depth changes (hover lift, pressed inset) for interaction, and keep transitions 150–250ms ease-out.",
+      "Do verify ink-muted (#5c6b7a) hits ≥4.5:1 wherever it carries body text or placeholders; pair color with text/icon for state.",
+      "Do give every interactive element cursor: pointer and a visible red :focus-visible ring."
+    ],
+    "donts": [
+      "Don't reproduce Canvas LMS's cluttered, institutional density — read lighter and answer 'where do I stand?' faster.",
+      "Don't drift toward cold enterprise SaaS — generic navy-and-gray dashboards, soulless data tables, corporate chrome.",
+      "Don't add anything childish, gamified, or game-like — no confetti, mascots, cartoon badges, or playful display fonts.",
+      "Don't build anxiety theater — walls of red alerts or guilt-driven nagging. Red is a scalpel, not a fire alarm.",
+      "Don't float a borderless card or use a shadow without its 2px border — it looks unfinished on the paper field.",
+      "Don't scatter the uppercase red section label as a decorative eyebrow; at most one per logical section.",
+      "Don't use glassmorphism/backdrop-blur in the nav or cards, gradient text, or border-left colored stripes as accents."
+    ]
+  }
+}

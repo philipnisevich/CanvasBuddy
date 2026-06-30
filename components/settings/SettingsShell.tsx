@@ -1,9 +1,9 @@
 "use client";
 
-import { Calculator, Link2, User } from "lucide-react";
+import { Calculator, Link2, Palette, User } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
-export type SettingsSection = "canvas" | "account" | "gpa";
+export type SettingsSection = "canvas" | "account" | "gpa" | "appearance";
 
 const SECTIONS: {
   id: SettingsSection;
@@ -28,6 +28,12 @@ const SECTIONS: {
     label: "GPA & grading",
     description: "Scale and course weighting",
     icon: Calculator,
+  },
+  {
+    id: "appearance",
+    label: "Appearance",
+    description: "Theme and accent color",
+    icon: Palette,
   },
 ];
 
@@ -71,7 +77,7 @@ export default function SettingsShell({
                   <span
                     className={`mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-[var(--radius)] border-2 ${
                       isActive
-                        ? "border-[var(--color-canvas-red-dark)] bg-[var(--color-canvas-red)] text-white"
+                        ? "border-transparent bg-[var(--accent)] text-[var(--on-accent)]"
                         : "border-[var(--border)] bg-[var(--card)] text-[var(--color-text-muted)]"
                     }`}
                     aria-hidden

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import AppShell, { AppShellCentered } from "@/components/ui/AppShell";
+import PageToolbar from "@/components/ui/PageToolbar";
 import OnboardingSteps from "@/components/ui/OnboardingSteps";
 import CanvasCredentialsForm from "@/components/CanvasCredentialsForm";
 import SupabaseSetupBanner from "@/components/SupabaseSetupBanner";
@@ -12,11 +13,17 @@ import SettingsShell, {
 } from "@/components/settings/SettingsShell";
 import AccountPasswordSection from "@/components/settings/AccountPasswordSection";
 import GpaPreferencesForm from "@/components/settings/GpaPreferencesForm";
+import AppearanceSettings from "@/components/settings/AppearanceSettings";
 import { useApp } from "@/contexts/AppProvider";
 
 type PageState = "loading" | "unauthenticated" | "ready";
 
-const VALID_SECTIONS: SettingsSection[] = ["canvas", "account", "gpa"];
+const VALID_SECTIONS: SettingsSection[] = [
+  "canvas",
+  "account",
+  "gpa",
+  "appearance",
+];
 
 function parseSection(value: string | null): SettingsSection {
   if (value && VALID_SECTIONS.includes(value as SettingsSection)) {
@@ -163,20 +170,22 @@ export default function SettingsPageContent() {
 
   return (
     <AppShell
+      showNav
       subtitle={email ? `Signed in as ${email}` : undefined}
       actions={
-        <Link href="/" className="cb-btn-secondary-nav">
-          Home
-        </Link>
+        <button
+          type="button"
+          onClick={handleLogout}
+          className="cb-btn-secondary-nav"
+        >
+          Sign out
+        </button>
       }
     >
-      <div className="mb-8">
-        <h1 className="text-2xl font-semibold">Settings</h1>
-        <p className="mt-2 text-sm text-[var(--muted)]">
-          Connect Canvas, manage your account, and align GPA calculations with
-          your school.
-        </p>
-      </div>
+      <PageToolbar
+        title="Settings"
+        description="Connect Canvas, manage your account, choose your theme, and align GPA calculations with your school."
+      />
 
       {!dbReady && section === "canvas" && (
         <div className="mb-8">
@@ -296,6 +305,8 @@ export default function SettingsPageContent() {
         )}
 
         {section === "gpa" && <GpaPreferencesForm />}
+
+        {section === "appearance" && <AppearanceSettings />}
       </SettingsShell>
     </AppShell>
   );

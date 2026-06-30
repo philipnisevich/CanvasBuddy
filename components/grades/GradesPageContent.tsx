@@ -24,7 +24,6 @@ export default function GradesPageContent() {
       showNav
     >
       <PageToolbar
-        label="Academic"
         title="Grades & GPA"
         description="Current grades from your active Canvas courses."
         actions={

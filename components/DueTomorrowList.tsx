@@ -94,7 +94,7 @@ export default function DueTomorrowList({
                       </span>
                     )}
                     {item.late && (
-                      <span className="rounded-full border-2 border-[var(--warning)] bg-[var(--warning-soft)] px-2.5 py-0.5 text-xs font-bold text-[#854d0e]">
+                      <span className="rounded-full border-2 border-[var(--warning)] bg-[var(--warning-soft)] px-2.5 py-0.5 text-xs font-bold text-[var(--warning-ink)]">
                         Late
                       </span>
                     )}

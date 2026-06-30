@@ -29,9 +29,9 @@
 
 ### Typography
 
-- **Heading Font:** Inter
-- **Body Font:** Inter
-- **Mood:** Professional + Clear typography
+- **Heading Font:** Source Serif 4 (scholarly serif; also large metric figures)
+- **Body Font:** Source Sans 3 (humanist sans; body + UI)
+- **Mood:** Academic, precise, trustworthy — serif/sans contrast for ledger-like credibility. See root `DESIGN.md` for the canonical type system.
 
 ### Spacing Variables
 

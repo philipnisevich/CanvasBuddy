@@ -1,12 +1,10 @@
 import type { ReactNode } from "react";
 
 export default function PageToolbar({
-  label,
   title,
   description,
   actions,
 }: {
-  label?: string;
   title: string;
   description?: string;
   actions?: ReactNode;
@@ -14,7 +12,6 @@ export default function PageToolbar({
   return (
     <div className="cb-page-header">
       <div className="min-w-0 flex-1">
-        {label && <p className="cb-section-label">{label}</p>}
         <h1 className="text-2xl font-semibold text-[var(--color-text)]">
           {title}
         </h1>

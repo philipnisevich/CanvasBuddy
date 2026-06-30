@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { GraduationCap } from "lucide-react";
 import AppNav from "@/components/ui/AppNav";
+import ThemeToggle from "@/components/ui/ThemeToggle";
 
 function Logo({
   onDark = false,
@@ -22,7 +23,7 @@ function Logo({
         <GraduationCap className="h-5 w-5" strokeWidth={2.25} />
       </span>
       <span
-        className={`font-[family-name:var(--font-heading)] text-lg font-bold tracking-tight ${
+        className={`font-[family-name:var(--font-heading)] text-lg font-bold tracking-normal ${
           onDark
             ? "text-[var(--color-nav-text)]"
             : "text-[var(--color-text)] group-hover:text-[var(--color-canvas-red)]"
@@ -76,14 +77,13 @@ export default function AppShell({
                 </p>
               )}
             </div>
-            {actions && (
-              <nav
-                className="flex flex-wrap items-center gap-2"
-                aria-label="Account"
-              >
-                {actions}
-              </nav>
-            )}
+            <nav
+              className="flex flex-wrap items-center gap-2"
+              aria-label="Account"
+            >
+              {actions}
+              <ThemeToggle />
+            </nav>
           </div>
           {showNav && <AppNav />}
         </div>
