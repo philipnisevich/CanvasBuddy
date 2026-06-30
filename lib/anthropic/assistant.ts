@@ -8,7 +8,7 @@ import type {
   GpaSummaryContext,
 } from "@/lib/canvas/types";
 
-const DEFAULT_MODEL = "claude-sonnet-4-20250514";
+const DEFAULT_MODEL = "claude-sonnet-4-6";
 const MAX_MESSAGE_LENGTH = 2000;
 const MAX_OUTPUT_TOKENS = 1024;
 const MAX_HISTORY_TURNS = 6;
