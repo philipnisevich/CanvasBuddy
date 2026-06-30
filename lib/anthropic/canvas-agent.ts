@@ -11,7 +11,7 @@ import type { GpaSummaryContext } from "@/lib/canvas/types";
 import type { GpaPreferences } from "@/lib/gpa-preferences";
 import type { ChatTurn } from "@/lib/anthropic/assistant";
 
-const DEFAULT_MODEL = "claude-sonnet-4-20250514";
+const DEFAULT_MODEL = "claude-sonnet-4-6";
 const MAX_MESSAGE_LENGTH = 2000;
 const MAX_OUTPUT_TOKENS = 2048;
 const MAX_HISTORY_TURNS = 6;

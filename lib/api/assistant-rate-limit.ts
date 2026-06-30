@@ -41,24 +41,12 @@ function pruneStale(now: number) {
   }
 }
 
-function bumpWindow(
-  state: WindowState,
-  windowMs: number,
-  max: number,
-  now: number
-): { allowed: boolean; remaining: number; resetAt: number } {
+/** Reset the window if it has expired. Does not increment the counter. */
+function rollWindow(state: WindowState, windowMs: number, now: number) {
   if (now - state.windowStart >= windowMs) {
     state.windowStart = now;
     state.count = 0;
   }
-  state.count += 1;
-  const remaining = Math.max(0, max - state.count);
-  const resetAt = state.windowStart + windowMs;
-  return {
-    allowed: state.count <= max,
-    remaining,
-    resetAt,
-  };
 }
 
 export function checkAssistantRateLimit(key: string): RateLimitResult {
@@ -74,39 +62,47 @@ export function checkAssistantRateLimit(key: string): RateLimitResult {
     stores.set(key, entry);
   }
 
-  const minute = bumpWindow(entry.minute, MINUTE_MS, MINUTE_MAX, now);
-  const hour = bumpWindow(entry.hour, HOUR_MS, HOUR_MAX, now);
+  rollWindow(entry.minute, MINUTE_MS, now);
+  rollWindow(entry.hour, HOUR_MS, now);
 
-  if (!minute.allowed) {
-    const retryAfterSec = Math.max(
-      1,
-      Math.ceil((minute.resetAt - now) / 1000)
-    );
+  const minuteResetAt = entry.minute.windowStart + MINUTE_MS;
+  const hourResetAt = entry.hour.windowStart + HOUR_MS;
+
+  // Check both windows before committing so a rejected request does not
+  // consume quota in either window.
+  if (entry.minute.count >= MINUTE_MAX) {
+    const retryAfterSec = Math.max(1, Math.ceil((minuteResetAt - now) / 1000));
     return {
       allowed: false,
       limit: MINUTE_MAX,
       remaining: 0,
-      resetAt: minute.resetAt,
+      resetAt: minuteResetAt,
       retryAfterSec,
     };
   }
 
-  if (!hour.allowed) {
-    const retryAfterSec = Math.max(1, Math.ceil((hour.resetAt - now) / 1000));
+  if (entry.hour.count >= HOUR_MAX) {
+    const retryAfterSec = Math.max(1, Math.ceil((hourResetAt - now) / 1000));
     return {
       allowed: false,
       limit: HOUR_MAX,
       remaining: 0,
-      resetAt: hour.resetAt,
+      resetAt: hourResetAt,
       retryAfterSec,
     };
   }
 
+  entry.minute.count += 1;
+  entry.hour.count += 1;
+
   return {
     allowed: true,
     limit: MINUTE_MAX,
-    remaining: Math.min(minute.remaining, hour.remaining),
-    resetAt: Math.min(minute.resetAt, hour.resetAt),
+    remaining: Math.min(
+      MINUTE_MAX - entry.minute.count,
+      HOUR_MAX - entry.hour.count
+    ),
+    resetAt: Math.min(minuteResetAt, hourResetAt),
   };
 }
 

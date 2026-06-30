@@ -55,6 +55,61 @@ function parseCourseId(value: unknown): number | null {
   return Math.floor(id);
 }
 
+function isValidYmd(value: string): boolean {
+  return /^\d{4}-\d{2}-\d{2}$/.test(value.trim());
+}
+
+const COURSE_SCOPED_TOOLS = new Set([
+  "get_course_syllabus",
+  "search_course",
+  "list_announcements",
+  "list_assignments",
+  "list_modules",
+  "list_module_items",
+  "list_pages",
+  "get_page",
+  "list_calendar_events",
+  "get_front_page",
+  "get_assignment_submission",
+]);
+
+/**
+ * Syntactic validation of tool arguments. Runs before the tool-call budget is
+ * charged so a malformed call from the model doesn't waste the call limit.
+ * Returns an error string, or null when arguments are well-formed.
+ */
+function validateToolInput(
+  toolName: string,
+  input: Record<string, unknown>
+): string | null {
+  if (COURSE_SCOPED_TOOLS.has(toolName) && parseCourseId(input.course_id) == null) {
+    return "Invalid course_id.";
+  }
+  if (toolName === "list_module_items") {
+    const mid = Number(input.module_id);
+    if (!Number.isFinite(mid) || mid <= 0) return "Invalid module_id.";
+  }
+  if (toolName === "get_assignment_submission") {
+    const aid = Number(input.assignment_id);
+    if (!Number.isFinite(aid) || aid <= 0) return "Invalid assignment_id.";
+  }
+  if (toolName === "search_course") {
+    if (String(input.search_term ?? "").trim().length < 2) {
+      return "search_term must be at least 2 characters.";
+    }
+  }
+  if (toolName === "list_planner_items") {
+    if (!isValidYmd(String(input.start_date ?? ""))) {
+      return "start_date is required and must be yyyy-mm-dd.";
+    }
+    const end = input.end_date != null ? String(input.end_date).trim() : "";
+    if (end && !isValidYmd(end)) {
+      return "end_date must be yyyy-mm-dd when provided.";
+    }
+  }
+  return null;
+}
+
 function assertCourseAllowed(
   state: AgentExecutorState,
   courseId: number
@@ -788,15 +843,20 @@ export async function executeCanvasTool(
     return { content: `Unknown tool: ${toolName}`, isError: true };
   }
 
-  const limitErr = bumpToolCount(state);
-  if (limitErr) {
-    return { content: limitErr, isError: true };
-  }
-
   const input =
     toolInput && typeof toolInput === "object"
       ? (toolInput as Record<string, unknown>)
       : {};
+
+  const validationError = validateToolInput(toolName, input);
+  if (validationError) {
+    return { content: validationError, isError: true };
+  }
+
+  const limitErr = bumpToolCount(state);
+  if (limitErr) {
+    return { content: limitErr, isError: true };
+  }
 
   try {
     switch (toolName) {
