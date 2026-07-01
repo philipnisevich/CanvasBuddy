@@ -27,21 +27,21 @@ export function dbSetupMessage(
 ): string {
   if (issue === "missing_table") {
     if (table === "gpa") {
-      return "GPA settings table missing. In Supabase SQL Editor, run supabase/migrations/003_user_gpa_preferences.sql, then refresh and save again.";
+      return "GPA settings table missing. In Supabase SQL Editor, run supabase/migrations/000_setup_all.sql, then refresh and save again.";
     }
     if (table === "app") {
-      return "App preferences table missing. In Supabase SQL Editor, run supabase/migrations/004_user_app_preferences.sql, then try again.";
+      return "App preferences table missing. In Supabase SQL Editor, run supabase/migrations/000_setup_all.sql, then try again.";
     }
-    return "Database table missing. In Supabase SQL Editor, run supabase/migrations/001_user_canvas_credentials.sql, then try again.";
+    return "Database table missing. In Supabase SQL Editor, run supabase/migrations/000_setup_all.sql, then try again.";
   }
   if (issue === "permission_denied") {
     if (table === "gpa") {
-      return "GPA table permissions missing. In Supabase SQL Editor, re-run the grant section at the bottom of 003_user_gpa_preferences.sql.";
+      return "GPA table permissions missing. In Supabase SQL Editor, re-run supabase/migrations/000_setup_all.sql.";
     }
     if (table === "app") {
-      return "App preferences permissions missing. Re-run the grant section at the bottom of 004_user_app_preferences.sql.";
+      return "App preferences permissions missing. Re-run supabase/migrations/000_setup_all.sql.";
     }
-    return "Database permissions missing. In Supabase SQL Editor, run supabase/migrations/002_grants.sql, then refresh and try again.";
+    return "Database permissions missing. In Supabase SQL Editor, run supabase/migrations/000_setup_all.sql, then refresh and try again.";
   }
   return "Database error. Check Supabase logs and try again.";
 }

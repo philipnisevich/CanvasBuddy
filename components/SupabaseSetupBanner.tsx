@@ -144,15 +144,14 @@ export default function SupabaseSetupBanner({
       </ol>
       {target === "canvas" && !showGrants && (
         <p className="mt-2 text-xs text-[var(--warning-ink)]">
-          If you already created the table, run only Step 2 (grants) from{" "}
-          <code className="font-mono">002_grants.sql</code>.
+          If you already created the table, re-run{" "}
+          <code className="font-mono">000_setup_all.sql</code>.
         </p>
       )}
       {target === "gpa" && !showGrants && (
         <p className="mt-2 text-xs text-[var(--warning-ink)]">
           This matches{" "}
-          <code className="font-mono">003_user_gpa_preferences.sql</code> in
-          the repo.
+          <code className="font-mono">000_setup_all.sql</code> in the repo.
         </p>
       )}
       <pre className="mt-3 max-h-48 overflow-auto rounded-[var(--radius)] border-[3px] border-[var(--border)] bg-[var(--card)] p-3 font-mono text-xs text-[var(--color-text)]">

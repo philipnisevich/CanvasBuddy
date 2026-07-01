@@ -64,11 +64,10 @@ Optional. Enables **Sign in with Canvas** so students can skip pasting tokens.
 
 1. Create a [Supabase](https://supabase.com) project.
 
-2. In the Supabase SQL editor, run these migrations in order:
-   - `supabase/migrations/001_user_canvas_credentials.sql`
-   - `supabase/migrations/003_user_gpa_preferences.sql`
-   - `supabase/migrations/004_user_app_preferences.sql`  
-   If you see permission errors on Canvas or GPA tables after sign-in, also run `supabase/migrations/002_grants.sql`.
+2. In the Supabase SQL editor, run `supabase/migrations/000_setup_all.sql`. It
+   creates every table, RLS policy, and grant the app needs and is safe to
+   re-run (idempotent), so it also fixes any "permission denied" errors on the
+   Canvas or GPA tables after sign-in.
 
 3. In Supabase **Authentication → URL Configuration**, set:
    - **Site URL** to your deployed app URL (e.g. `https://your-app-domain.com`)
@@ -143,7 +142,7 @@ Set `NEXT_PUBLIC_SITE_URL=https://canvasbuddy.ai` in Vercel so confirmation emai
 - **Supabase auth**: Email/password sign-in. Sign-up confirmation emails go through Brevo; links are created with the Supabase service role and finish at `/auth/callback`.
 - **`user_canvas_credentials`**: Per-user Canvas URL and access token (row-level security).
 - **`user_gpa_preferences`**: GPA scale and weighting for widgets and estimates.
-- **`user_app_preferences`**: Home widget layout and upcoming horizon (days). Without migration 004, layout can fall back to browser storage.
+- **`user_app_preferences`**: Home widget layout and upcoming horizon (days). Without this table, layout can fall back to browser storage.
 
 ### Pages and Canvas data
 
