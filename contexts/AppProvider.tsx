@@ -206,13 +206,21 @@ export function AppProvider({
         if (needGpa) requests.push(fetch("/api/settings/gpa"));
         const [canvasRes, dbRes, gpaRes] = await Promise.all(requests);
 
+        // The Canvas connection status is load-bearing — it drives the
+        // "connected" vs "connect Canvas" UI. An HTTP error doesn't reject the
+        // fetch, so treat a non-ok response as an error rather than silently
+        // reporting a confident (and possibly wrong) "not connected" default.
+        if (!canvasRes.ok) {
+          settingsStartedRef.current = false;
+          setSettingsStatus("error");
+          return;
+        }
+
         const next: SettingsData = { ...DEFAULT_SETTINGS_DATA };
 
-        if (canvasRes.ok) {
-          const c = await canvasRes.json();
-          next.hasCredentials = !!c.hasCredentials;
-          next.canvasBaseUrl = c.canvasBaseUrl ?? "";
-        }
+        const c = await canvasRes.json();
+        next.hasCredentials = !!c.hasCredentials;
+        next.canvasBaseUrl = c.canvasBaseUrl ?? "";
 
         if (dbRes.ok) {
           const db = await dbRes.json();

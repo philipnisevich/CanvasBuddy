@@ -7,6 +7,7 @@ import PageToolbar from "@/components/ui/PageToolbar";
 import OnboardingSteps from "@/components/ui/OnboardingSteps";
 import CanvasCredentialsForm from "@/components/CanvasCredentialsForm";
 import SupabaseSetupBanner from "@/components/SupabaseSetupBanner";
+import Alert from "@/components/ui/Alert";
 import SettingsShell, {
   type SettingsSection,
 } from "@/components/settings/SettingsShell";
@@ -163,7 +164,30 @@ export default function SettingsPageContent() {
       )}
 
       <SettingsShell active={section} onNavigate={navigate}>
-        {section === "canvas" && (
+        {section === "canvas" && settingsStatus === "error" && (
+          // The connection status couldn't load. Show an honest, retryable
+          // notice instead of the default "not connected" state, which would
+          // wrongly imply a connected user's Canvas link was lost.
+          <div className="mt-6">
+            <Alert variant="warning">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <span>
+                  We couldn&apos;t load your Canvas connection status right now.
+                  Your connection hasn&apos;t changed — this is just a display
+                  problem.
+                </span>
+                <button
+                  type="button"
+                  onClick={() => void refreshSettings()}
+                  className="cb-btn-ghost shrink-0 text-sm"
+                >
+                  Try again
+                </button>
+              </div>
+            </Alert>
+          </div>
+        )}
+        {section === "canvas" && settingsStatus !== "error" && (
           <>
             <OnboardingSteps current={hasCredentials ? 3 : 2} />
             <section className="cb-card mt-6 overflow-hidden">
