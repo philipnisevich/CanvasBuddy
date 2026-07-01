@@ -61,7 +61,7 @@ export async function PUT(request: NextRequest) {
         persisted: false,
         hint:
           issue === "missing_table"
-            ? "Layout saved in this browser. To also save to your account, run migration 004 in the Supabase SQL Editor (see Settings → database status)."
+            ? "Layout saved in this browser. To also save to your account, run migration 000_setup_all.sql in the Supabase SQL Editor (see Settings → database status)."
             : dbSetupMessage(issue, "app"),
       });
     }

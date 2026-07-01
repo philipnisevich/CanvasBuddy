@@ -59,7 +59,7 @@ When adding a Canvas agent tool you must touch **all** of: the schema in `tools.
 
 Supabase tables, each row-level-security scoped to the user: `user_canvas_credentials`, `user_gpa_preferences`, `user_app_preferences` (home widget layout + upcoming horizon). DB access helpers are `lib/*-db.ts`; defaults live in the matching non-`-db` file (e.g. `lib/gpa-preferences.ts`) and are used whenever the table is missing or a read fails — **preference reads are written to degrade gracefully, never to throw**, so the app works before migrations are run.
 
-Migrations in `supabase/migrations/` are **applied manually** in the Supabase SQL editor (run 001, 003, 004; 002 grants fixes RLS permission errors). There is no migration runner.
+Migrations in `supabase/migrations/` are **applied manually** in the Supabase SQL editor. Run `000_setup_all.sql` — a single idempotent script that creates every table, RLS policy, and grant (and re-running it fixes RLS permission errors). There is no migration runner.
 
 ## Conventions
 
