@@ -1,7 +1,6 @@
 -- CanvasBuddy — full schema setup in one idempotent script.
 -- Safe to paste into the Supabase SQL editor any number of times: it creates
 -- only what's missing and re-applies all policies/grants. Supersedes running
--- 001–004 individually (those are kept for history).
 
 -- ── 001: user_canvas_credentials ─────────────────────────────
 create table if not exists public.user_canvas_credentials (
