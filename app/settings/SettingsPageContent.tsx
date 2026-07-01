@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import AppShell, { AppShellCentered } from "@/components/ui/AppShell";
 import PageToolbar from "@/components/ui/PageToolbar";
 import OnboardingSteps from "@/components/ui/OnboardingSteps";
@@ -29,21 +29,28 @@ function parseSection(value: string | null): SettingsSection {
   return "canvas";
 }
 
+// Read the URL synchronously so the first render already has the right tab.
+// window is undefined during SSR — the client's lazy initializer corrects it
+// before any tab UI paints (that UI is gated behind the loading skeleton).
+function initialSection(): SettingsSection {
+  if (typeof window === "undefined") return "canvas";
+  return parseSection(new URLSearchParams(window.location.search).get("tab"));
+}
+
+function initialRecoveryMode(): boolean {
+  if (typeof window === "undefined") return false;
+  return new URLSearchParams(window.location.search).get("recovery") === "1";
+}
+
 export default function SettingsPageContent() {
   const { gate, settings, settingsStatus, refreshSettings } = useApp();
   const email = gate.userEmail;
   const [disconnecting, setDisconnecting] = useState(false);
-  const [section, setSection] = useState<SettingsSection>("canvas");
-  const [recoveryMode, setRecoveryMode] = useState(false);
-
   // Tab + recovery flag come from the URL (e.g. password-reset emails land at
-  // /settings?recovery=1). Read them client-side so the page needs no Suspense
-  // boundary — that boundary used to drop the nav and cause the flash.
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    setSection(parseSection(params.get("tab")));
-    setRecoveryMode(params.get("recovery") === "1");
-  }, []);
+  // /settings?recovery=1). Read them in the lazy initializer so the first
+  // render already shows the right tab — no post-mount flash of the default.
+  const [section, setSection] = useState<SettingsSection>(initialSection);
+  const [recoveryMode, setRecoveryMode] = useState(initialRecoveryMode);
 
   function clearRecoveryParam() {
     setRecoveryMode(false);

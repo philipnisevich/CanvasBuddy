@@ -30,7 +30,11 @@ import {
   DEFAULT_GPA_PREFERENCES,
   type GpaPreferences,
 } from "@/lib/gpa-preferences";
-import { useAppGate, type AppGateState } from "@/hooks/useAppGate";
+import {
+  useAppGate,
+  type AppGateState,
+  type InitialGate,
+} from "@/hooks/useAppGate";
 
 const LAYOUT_STORAGE_KEY = "canvasbuddy-home-layout";
 
@@ -88,8 +92,14 @@ interface AppContextValue {
 
 const AppContext = createContext<AppContextValue | null>(null);
 
-export function AppProvider({ children }: { children: ReactNode }) {
-  const gate = useAppGate();
+export function AppProvider({
+  children,
+  initialGate,
+}: {
+  children: ReactNode;
+  initialGate?: InitialGate;
+}) {
+  const gate = useAppGate(initialGate);
   const [dataStatus, setDataStatus] = useState<DataStatus>("idle");
   const [dataError, setDataError] = useState<string | null>(null);
   const [payload, setPayload] = useState<AppDataPayload | null>(null);

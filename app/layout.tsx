@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Source_Serif_4, Source_Sans_3, Source_Code_Pro } from "next/font/google";
 import ClientRoot from "@/components/ClientRoot";
+import { getInitialGate } from "@/lib/initial-gate";
 import "./globals.css";
 
 // Headings: a transitional, scholarly serif from the Source superfamily —
@@ -39,11 +40,15 @@ export const metadata: Metadata = {
 // the wrong accent. The app is light-only, so the theme stays fixed to light.
 const themeScript = `(function(){try{var a=localStorage.getItem('cb-accent')||'ink';var e=document.documentElement;e.dataset.theme='light';e.dataset.accent=a;}catch(_){var e=document.documentElement;e.dataset.theme='light';e.dataset.accent='ink';}})();`;
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  // Resolve the auth gate server-side so the first paint is the right view
+  // (landing for logged-out visitors, the app for signed-in users).
+  const initialGate = await getInitialGate();
+
   return (
     <html
       lang="en"
@@ -56,7 +61,7 @@ export default function RootLayout({
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
       </head>
       <body className="min-h-screen antialiased">
-        <ClientRoot>{children}</ClientRoot>
+        <ClientRoot initialGate={initialGate}>{children}</ClientRoot>
       </body>
     </html>
   );
