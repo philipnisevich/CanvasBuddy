@@ -64,14 +64,12 @@ export default function AuthForm() {
 
   return (
     <form onSubmit={handleSubmit} className="text-left">
-      <div className="mb-6 flex rounded-[var(--radius)] border border-[var(--border)] bg-[var(--card-muted)] p-1">
+      <div className="cb-segment mb-6" role="tablist" aria-label="Authentication mode">
         <button
           type="button"
-          className={`flex-1 rounded-md py-2 text-sm font-medium transition ${
-            mode === "signin"
-              ? "bg-[var(--card)] shadow-sm"
-              : "text-[var(--muted)]"
-          }`}
+          role="tab"
+          aria-selected={mode === "signin"}
+          className={`cb-segment-btn ${mode === "signin" ? "cb-segment-btn--active" : ""}`}
           onClick={() => {
             setMode("signin");
             setConfirmPassword("");
@@ -83,11 +81,9 @@ export default function AuthForm() {
         </button>
         <button
           type="button"
-          className={`flex-1 rounded-md py-2 text-sm font-medium transition ${
-            mode === "signup"
-              ? "bg-[var(--card)] shadow-sm"
-              : "text-[var(--muted)]"
-          }`}
+          role="tab"
+          aria-selected={mode === "signup"}
+          className={`cb-segment-btn ${mode === "signup" ? "cb-segment-btn--active" : ""}`}
           onClick={() => {
             setMode("signup");
             setConfirmPassword("");
@@ -167,10 +163,7 @@ export default function AuthForm() {
       {mode === "signin" && (
         <>
           <p className="mt-3 text-center text-sm">
-            <Link
-              href="/login?forgot=1"
-              className="font-medium text-[var(--accent)] hover:underline"
-            >
+            <Link href="/login?forgot=1" className="cb-link">
               Forgot password?
             </Link>
           </p>

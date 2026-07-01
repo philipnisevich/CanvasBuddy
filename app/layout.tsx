@@ -35,9 +35,9 @@ export const metadata: Metadata = {
     "Grades, assignments due tomorrow, GPA estimates, and an AI study assistant for your Canvas courses.",
 };
 
-// Set theme + accent on <html> before first paint to avoid a flash of the
-// wrong theme. Mirrors the defaults in contexts/ThemeProvider.tsx.
-const themeScript = `(function(){try{var m=localStorage.getItem('cb-theme-mode')||'system';var a=localStorage.getItem('cb-accent')||'ink';var d=m==='dark'||(m==='system'&&window.matchMedia('(prefers-color-scheme: dark)').matches);var e=document.documentElement;e.dataset.theme=d?'dark':'light';e.dataset.accent=a;}catch(_){var e=document.documentElement;e.dataset.theme='light';e.dataset.accent='ink';}})();`;
+// Set the selectable accent on <html> before first paint to avoid a flash of
+// the wrong accent. The app is light-only, so the theme stays fixed to light.
+const themeScript = `(function(){try{var a=localStorage.getItem('cb-accent')||'ink';var e=document.documentElement;e.dataset.theme='light';e.dataset.accent=a;}catch(_){var e=document.documentElement;e.dataset.theme='light';e.dataset.accent='ink';}})();`;
 
 export default function RootLayout({
   children,

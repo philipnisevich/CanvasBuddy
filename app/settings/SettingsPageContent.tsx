@@ -1,8 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useState } from "react";
-import { useSearchParams } from "next/navigation";
+import { useEffect, useState } from "react";
 import AppShell, { AppShellCentered } from "@/components/ui/AppShell";
 import PageToolbar from "@/components/ui/PageToolbar";
 import OnboardingSteps from "@/components/ui/OnboardingSteps";
@@ -15,8 +14,6 @@ import AccountPasswordSection from "@/components/settings/AccountPasswordSection
 import GpaPreferencesForm from "@/components/settings/GpaPreferencesForm";
 import AppearanceSettings from "@/components/settings/AppearanceSettings";
 import { useApp } from "@/contexts/AppProvider";
-
-type PageState = "loading" | "unauthenticated" | "ready";
 
 const VALID_SECTIONS: SettingsSection[] = [
   "canvas",
@@ -33,32 +30,20 @@ function parseSection(value: string | null): SettingsSection {
 }
 
 export default function SettingsPageContent() {
-  const { gate } = useApp();
-  const searchParams = useSearchParams();
-  const [state, setState] = useState<PageState>("loading");
-  const [email, setEmail] = useState<string | null>(null);
-  const [canvasBaseUrl, setCanvasBaseUrl] = useState("");
-  const [hasCredentials, setHasCredentials] = useState(false);
+  const { gate, settings, refreshSettings } = useApp();
+  const email = gate.userEmail;
   const [disconnecting, setDisconnecting] = useState(false);
-  const [dbReady, setDbReady] = useState(true);
-  const [gpaDbReady, setGpaDbReady] = useState(true);
-  const [dbIssue, setDbIssue] = useState<
-    "missing_table" | "permission_denied" | "unknown"
-  >("unknown");
-  const [gpaDbIssue, setGpaDbIssue] = useState<
-    "missing_table" | "permission_denied" | "unknown"
-  >("unknown");
-  const [section, setSection] = useState<SettingsSection>(() =>
-    parseSection(searchParams.get("tab"))
-  );
-  const [recoveryMode, setRecoveryMode] = useState(
-    () => searchParams.get("recovery") === "1"
-  );
+  const [section, setSection] = useState<SettingsSection>("canvas");
+  const [recoveryMode, setRecoveryMode] = useState(false);
 
+  // Tab + recovery flag come from the URL (e.g. password-reset emails land at
+  // /settings?recovery=1). Read them client-side so the page needs no Suspense
+  // boundary — that boundary used to drop the nav and cause the flash.
   useEffect(() => {
-    setSection(parseSection(searchParams.get("tab")));
-    setRecoveryMode(searchParams.get("recovery") === "1");
-  }, [searchParams]);
+    const params = new URLSearchParams(window.location.search);
+    setSection(parseSection(params.get("tab")));
+    setRecoveryMode(params.get("recovery") === "1");
+  }, []);
 
   function clearRecoveryParam() {
     setRecoveryMode(false);
@@ -67,69 +52,18 @@ export default function SettingsPageContent() {
     window.history.replaceState(null, "", url.toString());
   }
 
-  function navigate(section: SettingsSection) {
-    setSection(section);
+  function navigate(next: SettingsSection) {
+    setSection(next);
     const url = new URL(window.location.href);
-    url.searchParams.set("tab", section);
+    url.searchParams.set("tab", next);
     window.history.replaceState(null, "", url.toString());
   }
-
-  const loadSettings = useCallback(async () => {
-    setState("loading");
-    const meRes = await fetch("/api/auth/me");
-    if (meRes.status === 401) {
-      setState("unauthenticated");
-      return;
-    }
-
-    const me = await meRes.json();
-    setEmail(me.user?.email ?? null);
-
-    const [settingsRes, dbRes] = await Promise.all([
-      fetch("/api/settings/canvas"),
-      fetch("/api/settings/db-status"),
-    ]);
-
-    if (dbRes.ok) {
-      const db = await dbRes.json();
-      setDbReady(!!db.ready);
-      setGpaDbReady(db.gpaReady !== false);
-      if (db.issue === "missing_table" || db.issue === "permission_denied") {
-        setDbIssue(db.issue);
-      }
-      if (
-        db.gpaIssue === "missing_table" ||
-        db.gpaIssue === "permission_denied"
-      ) {
-        setGpaDbIssue(db.gpaIssue);
-      }
-    }
-
-    let credentialsConnected = false;
-    if (settingsRes.ok) {
-      const settings = await settingsRes.json();
-      credentialsConnected = !!settings.hasCredentials;
-      setHasCredentials(credentialsConnected);
-      setCanvasBaseUrl(settings.canvasBaseUrl ?? "");
-    }
-
-    setState("ready");
-
-    if (credentialsConnected) {
-      await gate.checkAuth({ silent: true });
-    }
-  }, [gate.checkAuth]);
-
-  useEffect(() => {
-    loadSettings();
-  }, [loadSettings]);
 
   async function handleDisconnect() {
     setDisconnecting(true);
     try {
       await fetch("/api/settings/canvas", { method: "DELETE" });
-      setHasCredentials(false);
-      setCanvasBaseUrl("");
+      await refreshSettings();
       await gate.checkAuth({ silent: true });
     } finally {
       setDisconnecting(false);
@@ -137,13 +71,24 @@ export default function SettingsPageContent() {
   }
 
   async function handleLogout() {
-    await fetch("/api/auth/logout", { method: "POST" });
-    window.location.href = "/login";
+    await gate.handleLogout();
   }
 
-  if (state === "loading") {
+  if (gate.state === "loading") {
     return (
-      <AppShell subtitle="Loading settings…">
+      <AppShell
+        showNav
+        subtitle="Loading settings…"
+        actions={
+          <button
+            type="button"
+            onClick={handleLogout}
+            className="cb-btn-secondary-nav"
+          >
+            Sign out
+          </button>
+        }
+      >
         <div className="animate-pulse space-y-4">
           <div className="h-8 w-48 rounded bg-[var(--border)]" />
           <div className="h-64 rounded-[var(--radius)] bg-[var(--border)]" />
@@ -152,7 +97,7 @@ export default function SettingsPageContent() {
     );
   }
 
-  if (state === "unauthenticated") {
+  if (gate.state === "unauthenticated") {
     return (
       <AppShellCentered>
         <div className="cb-card p-8 text-center">
@@ -167,6 +112,9 @@ export default function SettingsPageContent() {
       </AppShellCentered>
     );
   }
+
+  const { hasCredentials, canvasBaseUrl, dbReady, gpaDbReady, dbIssue, gpaIssue } =
+    settings;
 
   return (
     <AppShell
@@ -195,7 +143,7 @@ export default function SettingsPageContent() {
 
       {!gpaDbReady && section === "gpa" && (
         <div className="mb-8">
-          <SupabaseSetupBanner issue={gpaDbIssue} target="gpa" />
+          <SupabaseSetupBanner issue={gpaIssue} target="gpa" />
         </div>
       )}
 
@@ -226,8 +174,7 @@ export default function SettingsPageContent() {
                 <CanvasCredentialsForm
                   initialCanvasBaseUrl={canvasBaseUrl}
                   onSuccess={async () => {
-                    setHasCredentials(true);
-                    await loadSettings();
+                    await refreshSettings();
                     await gate.checkAuth({ silent: true });
                   }}
                 />

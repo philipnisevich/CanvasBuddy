@@ -1,34 +1,17 @@
 import Link from "next/link";
 import { GraduationCap } from "lucide-react";
 import AppNav from "@/components/ui/AppNav";
-import ThemeToggle from "@/components/ui/ThemeToggle";
 
-function Logo({
-  onDark = false,
-  linked = true,
-}: {
-  onDark?: boolean;
-  linked?: boolean;
-}) {
+function Logo({ linked = true }: { linked?: boolean }) {
   const mark = (
     <>
       <span
-        className={`flex h-10 w-10 items-center justify-center rounded-[var(--radius)] ${
-          onDark
-            ? "bg-[var(--color-canvas-red)] text-white"
-            : "border-2 border-[var(--color-canvas-red-dark)] bg-[var(--color-canvas-red)] text-white"
-        }`}
+        className="flex h-9 w-9 items-center justify-center rounded-[var(--radius)] bg-[var(--accent)] text-[var(--on-accent)]"
         aria-hidden
       >
         <GraduationCap className="h-5 w-5" strokeWidth={2.25} />
       </span>
-      <span
-        className={`font-[family-name:var(--font-heading)] text-lg font-bold tracking-normal ${
-          onDark
-            ? "text-[var(--color-nav-text)]"
-            : "text-[var(--color-text)] group-hover:text-[var(--color-canvas-red)]"
-        }`}
-      >
+      <span className="font-[family-name:var(--font-heading)] text-lg font-bold text-[var(--ink)] transition-colors duration-200 group-hover:text-[var(--accent-ink)]">
         CanvasBuddy
       </span>
     </>
@@ -43,7 +26,7 @@ function Logo({
   return (
     <Link
       href="/"
-      className="group flex cursor-pointer items-center gap-2.5 transition-opacity duration-200 hover:opacity-90"
+      className="group flex cursor-pointer items-center gap-2.5"
     >
       {mark}
     </Link>
@@ -62,39 +45,40 @@ export default function AppShell({
   showNav?: boolean;
 }) {
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-[var(--bg)]">
       <a href="#main-content" className="cb-skip-link">
         Skip to main content
       </a>
-      <header className="cb-nav-shell">
-        <div className="cb-nav-shell-inner flex flex-col gap-4">
-          <div className="flex flex-wrap items-center justify-between gap-4">
-            <div>
-              <Logo onDark />
-              {subtitle && (
-                <p className="mt-1 pl-12 text-sm font-medium text-[var(--color-nav-muted)]">
-                  {subtitle}
-                </p>
-              )}
-            </div>
+      <header className="sticky top-0 z-30 border-b border-[var(--hairline)] bg-[var(--bg)]">
+        <div className="mx-auto max-w-6xl px-4 sm:px-6">
+          <div className="flex flex-wrap items-center justify-between gap-3 py-3">
+            <Logo />
             <nav
               className="flex flex-wrap items-center gap-2"
               aria-label="Account"
             >
               {actions}
-              <ThemeToggle />
             </nav>
           </div>
-          {showNav && <AppNav />}
+          {showNav && (
+            <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 border-t border-[var(--hairline)] py-1.5">
+              <AppNav />
+              {subtitle && (
+                <p className="hidden truncate text-sm font-medium text-[var(--muted-ink)] sm:block">
+                  {subtitle}
+                </p>
+              )}
+            </div>
+          )}
         </div>
       </header>
       <main
         id="main-content"
-        className="mx-auto max-w-6xl px-4 py-8 sm:py-10"
+        className="mx-auto max-w-6xl px-4 py-8 sm:px-6 sm:py-10"
       >
         {children}
       </main>
-      <footer className="mx-auto max-w-6xl px-4 py-8 text-center text-sm text-[var(--color-text-muted)]">
+      <footer className="mx-auto max-w-6xl border-t border-[var(--hairline)] px-4 py-8 text-center text-sm text-[var(--muted-ink)] sm:px-6">
         CanvasBuddy uses your student Canvas account — not an administrator
         login.
       </footer>
@@ -110,11 +94,11 @@ export function AppShellCentered({
   wide?: boolean;
 }) {
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-[var(--bg)]">
       <a href="#main-content" className="cb-skip-link">
         Skip to main content
       </a>
-      <div className="mx-auto max-w-6xl px-4 pt-10 pb-16">
+      <div className="mx-auto max-w-6xl px-4 pt-10 pb-16 sm:px-6">
         <div className="mb-10 text-center">
           <Link
             href="/"
@@ -130,7 +114,7 @@ export function AppShellCentered({
           {children}
         </main>
       </div>
-      <footer className="mx-auto max-w-6xl border-t border-[var(--border)] px-4 py-8 text-center text-sm text-[var(--color-text-muted)]">
+      <footer className="mx-auto max-w-6xl border-t border-[var(--hairline)] px-4 py-8 text-center text-sm text-[var(--muted-ink)] sm:px-6">
         Built for students — grades, deadlines, and study help in one place.
       </footer>
     </div>

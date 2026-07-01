@@ -1,10 +1,10 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Alert from "@/components/ui/Alert";
 import SupabaseSetupBanner from "@/components/SupabaseSetupBanner";
+import { useApp } from "@/contexts/AppProvider";
 import {
-  DEFAULT_GPA_PREFERENCES,
   GPA_PRESET_OPTIONS,
   type GpaPreferences,
   type GpaPresetId,
@@ -13,8 +13,12 @@ import {
 } from "@/lib/gpa-preferences";
 
 export default function GpaPreferencesForm() {
-  const [prefs, setPrefs] = useState<GpaPreferences>(DEFAULT_GPA_PREFERENCES);
-  const [loading, setLoading] = useState(true);
+  // Preferences are preloaded into app context (via /api/app-data, or the
+  // settings preload when Canvas isn't connected), so this tab opens instantly
+  // with no fetch or skeleton. The form keeps a local working copy to edit.
+  const { gpaPreferences, setGpaPreferences } = useApp();
+  const [prefs, setPrefs] = useState<GpaPreferences>(gpaPreferences);
+  const [dirty, setDirty] = useState(false);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -23,40 +27,26 @@ export default function GpaPreferencesForm() {
     "missing_table" | "permission_denied" | "unknown"
   >("unknown");
 
-  const load = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await fetch("/api/settings/gpa");
-      const data = await res.json();
-      if (res.status === 503 && data.preferences) {
-        setPrefs(data.preferences);
-        setDbWarning(data.message ?? "Database not ready — using defaults.");
-        setDbIssue(
-          data.error === "db_permission" ? "permission_denied" : "missing_table"
-        );
-        return;
-      }
-      if (!res.ok) {
-        setError(data.message ?? "Could not load GPA settings.");
-        return;
-      }
-      setPrefs(data.preferences ?? DEFAULT_GPA_PREFERENCES);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
+  // Adopt the latest context value until the user starts editing, so a late
+  // preload (or a refresh) fills the form without clobbering in-progress edits.
   useEffect(() => {
-    load();
-  }, [load]);
+    if (!dirty) setPrefs(gpaPreferences);
+  }, [gpaPreferences, dirty]);
+
+  const editPrefs = useRef(
+    (updater: (p: GpaPreferences) => GpaPreferences) => {
+      setDirty(true);
+      setSaved(false);
+      setPrefs(updater);
+    }
+  ).current;
 
   function applyPreset(preset: GpaPresetId) {
     if (preset === "custom") {
-      setPrefs((p) => ({ ...p, preset: "custom" }));
+      editPrefs((p) => ({ ...p, preset: "custom" }));
       return;
     }
-    setPrefs(preferencesFromPreset(preset));
+    editPrefs(() => preferencesFromPreset(preset));
   }
 
   async function handleSave(e: React.FormEvent) {
@@ -83,7 +73,10 @@ export default function GpaPreferencesForm() {
         }
         return;
       }
-      setPrefs(data.preferences ?? prefs);
+      const next = data.preferences ?? prefs;
+      setPrefs(next);
+      setGpaPreferences(next);
+      setDirty(false);
       setSaved(true);
       setDbWarning(null);
     } finally {
@@ -92,15 +85,6 @@ export default function GpaPreferencesForm() {
   }
 
   const weighted = showWeightedGpa(prefs);
-
-  if (loading) {
-    return (
-      <section className="cb-card animate-pulse p-8">
-        <div className="h-6 w-48 rounded bg-[var(--border)]" />
-        <div className="mt-6 h-40 rounded bg-[var(--border)]" />
-      </section>
-    );
-  }
 
   return (
     <section className="cb-card overflow-hidden">
@@ -175,7 +159,7 @@ export default function GpaPreferencesForm() {
               hint="When off, A, A+, and A- all count as 4.0 (and similarly for B, C, D)."
               checked={prefs.usePlusMinus}
               onChange={(usePlusMinus) =>
-                setPrefs((p) => ({ ...p, preset: "custom", usePlusMinus }))
+                editPrefs((p) => ({ ...p, preset: "custom", usePlusMinus }))
               }
             />
 
@@ -184,7 +168,7 @@ export default function GpaPreferencesForm() {
               hint="Adds a bonus to Honors course GPA points (detected from course title)."
               checked={prefs.weightHonors}
               onChange={(weightHonors) =>
-                setPrefs((p) => ({ ...p, preset: "custom", weightHonors }))
+                editPrefs((p) => ({ ...p, preset: "custom", weightHonors }))
               }
             />
 
@@ -197,7 +181,7 @@ export default function GpaPreferencesForm() {
                 max={3}
                 step={0.1}
                 onChange={(honorsBonus) =>
-                  setPrefs((p) => ({ ...p, preset: "custom", honorsBonus }))
+                  editPrefs((p) => ({ ...p, preset: "custom", honorsBonus }))
                 }
               />
             )}
@@ -207,7 +191,7 @@ export default function GpaPreferencesForm() {
               hint="Adds a bonus for Advanced Placement or International Baccalaureate courses."
               checked={prefs.weightApIb}
               onChange={(weightApIb) =>
-                setPrefs((p) => ({ ...p, preset: "custom", weightApIb }))
+                editPrefs((p) => ({ ...p, preset: "custom", weightApIb }))
               }
             />
 
@@ -220,7 +204,7 @@ export default function GpaPreferencesForm() {
                 max={3}
                 step={0.1}
                 onChange={(apBonus) =>
-                  setPrefs((p) => ({ ...p, preset: "custom", apBonus }))
+                  editPrefs((p) => ({ ...p, preset: "custom", apBonus }))
                 }
               />
             )}
@@ -241,7 +225,7 @@ export default function GpaPreferencesForm() {
                   className="cb-input mt-2 max-w-xs"
                   value={prefs.maxWeightedGpa}
                   onChange={(e) =>
-                    setPrefs((p) => ({
+                    editPrefs((p) => ({
                       ...p,
                       preset: "custom",
                       maxWeightedGpa: Number(e.target.value),

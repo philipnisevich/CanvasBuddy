@@ -6,6 +6,7 @@ import AppShell, { AppShellCentered } from "@/components/ui/AppShell";
 import Alert from "@/components/ui/Alert";
 import OnboardingSteps from "@/components/ui/OnboardingSteps";
 import LoginButton from "@/components/LoginButton";
+import LandingPage from "@/components/landing/LandingPage";
 import type { AppGateState } from "@/hooks/useAppGate";
 
 function PageSkeleton() {
@@ -60,28 +61,7 @@ export function AppGateShell({
   }
 
   if (state === "unauthenticated") {
-    return (
-      <AppShellCentered wide>
-        <div className="text-center">
-          <h1 className="text-3xl font-semibold sm:text-4xl">
-            Your Canvas week at a glance
-          </h1>
-          <p className="cb-prose-muted mx-auto mt-4 max-w-xl">
-            See current grades, what&apos;s due tomorrow, and get study help —
-            all from your normal student Canvas account.
-          </p>
-        </div>
-        <div className="mt-10">
-          <OnboardingSteps current={1} />
-        </div>
-        {errorMessage && <Alert className="mt-8">{errorMessage}</Alert>}
-        <div className="cb-card mt-10 p-8 text-center">
-          <Link href="/login" className="cb-btn-primary mt-6 px-8 py-3">
-            Sign in or create account
-          </Link>
-        </div>
-      </AppShellCentered>
-    );
+    return <LandingPage errorMessage={errorMessage} />;
   }
 
   if (state === "needs_canvas") {

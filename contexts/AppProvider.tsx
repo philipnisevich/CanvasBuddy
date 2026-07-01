@@ -36,6 +36,26 @@ const LAYOUT_STORAGE_KEY = "canvasbuddy-home-layout";
 
 type DataStatus = "idle" | "loading" | "ready" | "error";
 
+type DbIssue = "missing_table" | "permission_denied" | "unknown";
+
+export interface SettingsData {
+  hasCredentials: boolean;
+  canvasBaseUrl: string;
+  dbReady: boolean;
+  gpaDbReady: boolean;
+  dbIssue: DbIssue;
+  gpaIssue: DbIssue;
+}
+
+const DEFAULT_SETTINGS_DATA: SettingsData = {
+  hasCredentials: false,
+  canvasBaseUrl: "",
+  dbReady: true,
+  gpaDbReady: true,
+  dbIssue: "unknown",
+  gpaIssue: "unknown",
+};
+
 interface AppContextValue {
   gate: {
     state: AppGateState;
@@ -58,6 +78,10 @@ interface AppContextValue {
   homeLayout: HomeLayout;
   setHomeLayout: (layout: HomeLayout) => void;
   gpaPreferences: GpaPreferences;
+  setGpaPreferences: (prefs: GpaPreferences) => void;
+  settings: SettingsData;
+  settingsStatus: DataStatus;
+  refreshSettings: () => Promise<void>;
   refresh: () => Promise<void>;
   setHorizonDays: (days: number) => Promise<void>;
 }
@@ -75,7 +99,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [gpaPreferences, setGpaPreferences] = useState<GpaPreferences>(
     DEFAULT_GPA_PREFERENCES
   );
+  const [settings, setSettings] = useState<SettingsData>(DEFAULT_SETTINGS_DATA);
+  const [settingsStatus, setSettingsStatus] = useState<DataStatus>("idle");
   const loadStartedRef = useRef(false);
+  const settingsStartedRef = useRef(false);
 
   const loadAppData = useCallback(
     async (force = false) => {
@@ -146,6 +173,85 @@ export function AppProvider({ children }: { children: ReactNode }) {
     await loadAppData(true);
   }, [loadAppData]);
 
+  // Settings data (Canvas connection + DB readiness) is preloaded once auth is
+  // ready and cached here, so opening Settings is instant and never refetches.
+  const loadSettingsData = useCallback(
+    async (force = false) => {
+      if (gate.state !== "ready" && gate.state !== "needs_canvas") return;
+      if (settingsStartedRef.current && !force) return;
+
+      settingsStartedRef.current = true;
+      setSettingsStatus("loading");
+
+      // /api/app-data already provides GPA prefs for connected users; only
+      // fetch them here when there's no app-data load (Canvas not connected).
+      const needGpa = gate.state === "needs_canvas";
+
+      try {
+        const requests = [
+          fetch("/api/settings/canvas"),
+          fetch("/api/settings/db-status"),
+        ];
+        if (needGpa) requests.push(fetch("/api/settings/gpa"));
+        const [canvasRes, dbRes, gpaRes] = await Promise.all(requests);
+
+        const next: SettingsData = { ...DEFAULT_SETTINGS_DATA };
+
+        if (canvasRes.ok) {
+          const c = await canvasRes.json();
+          next.hasCredentials = !!c.hasCredentials;
+          next.canvasBaseUrl = c.canvasBaseUrl ?? "";
+        }
+
+        if (dbRes.ok) {
+          const db = await dbRes.json();
+          next.dbReady = !!db.ready;
+          next.gpaDbReady = db.gpaReady !== false;
+          if (db.issue === "missing_table" || db.issue === "permission_denied") {
+            next.dbIssue = db.issue;
+          }
+          if (
+            db.gpaIssue === "missing_table" ||
+            db.gpaIssue === "permission_denied"
+          ) {
+            next.gpaIssue = db.gpaIssue;
+          }
+        }
+
+        if (needGpa && gpaRes?.ok) {
+          const gpa = await gpaRes.json();
+          if (gpa.preferences) setGpaPreferences(gpa.preferences);
+        }
+
+        setSettings(next);
+        setSettingsStatus("ready");
+      } catch {
+        settingsStartedRef.current = false;
+        setSettingsStatus("error");
+      }
+    },
+    [gate.state]
+  );
+
+  useEffect(() => {
+    if (gate.state === "ready" || gate.state === "needs_canvas") {
+      void loadSettingsData();
+    } else {
+      settingsStartedRef.current = false;
+      setSettingsStatus("idle");
+      setSettings(DEFAULT_SETTINGS_DATA);
+    }
+  }, [gate.state, loadSettingsData]);
+
+  const refreshSettings = useCallback(async () => {
+    settingsStartedRef.current = false;
+    await loadSettingsData(true);
+  }, [loadSettingsData]);
+
+  const updateGpaPreferences = useCallback((prefs: GpaPreferences) => {
+    setGpaPreferences(prefs);
+  }, []);
+
   const setHomeLayout = useCallback((layout: HomeLayout) => {
     const normalized = normalizeHomeLayout(layout);
     setHomeLayoutState(normalized);
@@ -202,6 +308,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
       homeLayout,
       setHomeLayout,
       gpaPreferences,
+      setGpaPreferences: updateGpaPreferences,
+      settings,
+      settingsStatus,
+      refreshSettings,
       refresh,
       setHorizonDays,
     }),
@@ -215,6 +325,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
       homeLayout,
       setHomeLayout,
       gpaPreferences,
+      updateGpaPreferences,
+      settings,
+      settingsStatus,
+      refreshSettings,
       refresh,
       setHorizonDays,
     ]

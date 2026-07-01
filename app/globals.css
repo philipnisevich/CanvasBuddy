@@ -350,6 +350,7 @@
     background: var(--accent-soft);
   }
 
+  /* Header account action — light-surface button (matches the ghost style). */
   .cb-btn-secondary-nav {
     display: inline-flex;
     align-items: center;
@@ -357,17 +358,17 @@
     gap: var(--space-sm);
     cursor: pointer;
     border-radius: var(--radius);
-    border: 1px solid oklch(1 0 0 / 0.22);
-    background: oklch(1 0 0 / 0.06);
+    border: 1px solid var(--hairline-strong);
+    background: var(--surface);
     padding: 0.45rem 1rem;
     font-size: 0.875rem;
     font-weight: 600;
-    color: var(--nav-text);
+    color: var(--ink);
     transition: background var(--transition-ui), border-color var(--transition-ui);
   }
   .cb-btn-secondary-nav:hover:not(:disabled) {
-    background: oklch(1 0 0 / 0.13);
-    border-color: oklch(1 0 0 / 0.4);
+    background: var(--surface-2);
+    border-color: var(--ink-2);
   }
 
   .cb-btn-ghost {
@@ -933,4 +934,102 @@
     font-size: 0.6875rem;
     color: var(--muted-ink);
   }
+
+  /* =======================================================================
+     LANDING / AUTH — marketing + sign-in surfaces
+     ======================================================================= */
+
+  /* Faint accounting-paper rules behind the hero, masked to fade out. */
+  .cb-ledger-rule {
+    background-image: repeating-linear-gradient(
+      to bottom,
+      transparent 0,
+      transparent calc(2.25rem - 1px),
+      var(--hairline) calc(2.25rem - 1px),
+      var(--hairline) 2.25rem
+    );
+    -webkit-mask-image: linear-gradient(to bottom, black, transparent 92%);
+    mask-image: linear-gradient(to bottom, black, transparent 92%);
+    opacity: 0.55;
+  }
+
+  /* A shared-hairline grid of cells — reads as a ledger table, not floating
+     cards. The 1px "gaps" are the container background showing through. */
+  .cb-cell-grid {
+    display: grid;
+    gap: 1px;
+    border: 1px solid var(--hairline);
+    border-radius: var(--radius-lg);
+    background: var(--hairline);
+    overflow: hidden;
+  }
+  .cb-cell {
+    background: var(--surface);
+    padding: 1.5rem;
+    transition: background-color var(--transition-ui);
+  }
+  .cb-cell-interactive:hover {
+    background: var(--surface-2);
+  }
+
+  /* Numbered step marker for the genuine 3-step sequence. */
+  .cb-step-num {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.25rem;
+    height: 2.25rem;
+    flex-shrink: 0;
+    border-radius: 9999px;
+    border: 1px solid var(--accent);
+    background: var(--accent-soft);
+    color: var(--accent-ink);
+    font-weight: 700;
+    letter-spacing: -0.02em;
+  }
+
+  /* Segmented control (sign-in / create account). */
+  .cb-segment {
+    display: flex;
+    gap: 0.25rem;
+    padding: 0.25rem;
+    border-radius: var(--radius);
+    border: 1px solid var(--hairline);
+    background: var(--surface-2);
+  }
+  .cb-segment-btn {
+    flex: 1;
+    cursor: pointer;
+    border-radius: var(--radius-sm);
+    border: 1px solid transparent;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--muted-ink);
+    transition: background var(--transition-ui), color var(--transition-ui),
+      border-color var(--transition-ui);
+  }
+  .cb-segment-btn:hover:not(.cb-segment-btn--active) {
+    color: var(--ink);
+  }
+  .cb-segment-btn--active {
+    background: var(--surface);
+    border-color: var(--hairline-strong);
+    color: var(--ink);
+  }
+}
+
+/* Calm entrance — additive; reduced-motion collapses it to the end state. */
+@keyframes cb-rise {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.cb-rise {
+  animation: cb-rise 700ms cubic-bezier(0.16, 1, 0.3, 1) both;
 }
