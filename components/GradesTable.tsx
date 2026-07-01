@@ -9,7 +9,7 @@ function gradeTone(score: number | null, hidden: boolean): string {
   if (hidden || score === null) return "font-medium text-[var(--color-text-muted)]";
   if (score >= 90) return "font-bold text-[var(--success)]";
   if (score >= 70) return "font-bold text-[var(--color-text)]";
-  return "font-bold text-[#854d0e]";
+  return "font-bold text-[var(--warning-ink)]";
 }
 
 export default function GradesTable({ grades }: GradesTableProps) {

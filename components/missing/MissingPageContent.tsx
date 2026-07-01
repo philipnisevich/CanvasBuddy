@@ -34,7 +34,6 @@ export default function MissingPageContent() {
       showNav
     >
       <PageToolbar
-        label="Gradebook"
         title="Missing & overdue"
         description="Assignments marked missing, past due without submission, or scored zero."
         actions={
@@ -59,7 +58,7 @@ export default function MissingPageContent() {
         <>
           <div className="cb-card mb-8 p-5">
             <p className="cb-section-label">Summary</p>
-            <p className="mt-1 font-[family-name:var(--font-heading)] text-3xl font-bold">
+            <p className="mt-1 cb-metric text-3xl font-bold">
               {missingData.items.length}
             </p>
             <p className="text-sm text-[var(--muted)]">

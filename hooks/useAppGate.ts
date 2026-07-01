@@ -8,10 +8,23 @@ export type AppGateState =
   | "needs_canvas"
   | "ready";
 
-export function useAppGate() {
-  const [state, setState] = useState<AppGateState>("loading");
-  const [userEmail, setUserEmail] = useState<string | null>(null);
-  const [userName, setUserName] = useState<string | null>(null);
+// Gate state resolved on the server (in layout.tsx) and handed to the client so
+// the correct view — landing vs app — is already in the first HTML paint.
+export interface InitialGate {
+  state: AppGateState;
+  userEmail: string | null;
+  userName: string | null;
+}
+
+export function useAppGate(initial?: InitialGate) {
+  const initialState = initial?.state ?? "loading";
+  const [state, setState] = useState<AppGateState>(initialState);
+  const [userEmail, setUserEmail] = useState<string | null>(
+    initial?.userEmail ?? null
+  );
+  const [userName, setUserName] = useState<string | null>(
+    initial?.userName ?? null
+  );
   const [oauthEnabled, setOauthEnabled] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
@@ -49,7 +62,9 @@ export function useAppGate() {
       )
       .catch(() => setOauthEnabled(false));
 
-    checkAuth();
+    // When the server already resolved the gate, refresh silently so we don't
+    // flash the loading state over the correct (server-rendered) view.
+    checkAuth({ silent: initialState !== "loading" });
 
     const params = new URLSearchParams(window.location.search);
     const oauthError = params.get("error");
@@ -57,6 +72,7 @@ export function useAppGate() {
       setErrorMessage(decodeURIComponent(oauthError));
       window.history.replaceState({}, "", window.location.pathname);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [checkAuth]);
 
   const handleLogout = useCallback(async () => {

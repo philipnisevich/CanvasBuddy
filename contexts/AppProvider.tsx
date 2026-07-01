@@ -30,11 +30,35 @@ import {
   DEFAULT_GPA_PREFERENCES,
   type GpaPreferences,
 } from "@/lib/gpa-preferences";
-import { useAppGate, type AppGateState } from "@/hooks/useAppGate";
+import {
+  useAppGate,
+  type AppGateState,
+  type InitialGate,
+} from "@/hooks/useAppGate";
 
 const LAYOUT_STORAGE_KEY = "canvasbuddy-home-layout";
 
 type DataStatus = "idle" | "loading" | "ready" | "error";
+
+type DbIssue = "missing_table" | "permission_denied" | "unknown";
+
+export interface SettingsData {
+  hasCredentials: boolean;
+  canvasBaseUrl: string;
+  dbReady: boolean;
+  gpaDbReady: boolean;
+  dbIssue: DbIssue;
+  gpaIssue: DbIssue;
+}
+
+const DEFAULT_SETTINGS_DATA: SettingsData = {
+  hasCredentials: false,
+  canvasBaseUrl: "",
+  dbReady: true,
+  gpaDbReady: true,
+  dbIssue: "unknown",
+  gpaIssue: "unknown",
+};
 
 interface AppContextValue {
   gate: {
@@ -58,14 +82,24 @@ interface AppContextValue {
   homeLayout: HomeLayout;
   setHomeLayout: (layout: HomeLayout) => void;
   gpaPreferences: GpaPreferences;
+  setGpaPreferences: (prefs: GpaPreferences) => void;
+  settings: SettingsData;
+  settingsStatus: DataStatus;
+  refreshSettings: () => Promise<void>;
   refresh: () => Promise<void>;
   setHorizonDays: (days: number) => Promise<void>;
 }
 
 const AppContext = createContext<AppContextValue | null>(null);
 
-export function AppProvider({ children }: { children: ReactNode }) {
-  const gate = useAppGate();
+export function AppProvider({
+  children,
+  initialGate,
+}: {
+  children: ReactNode;
+  initialGate?: InitialGate;
+}) {
+  const gate = useAppGate(initialGate);
   const [dataStatus, setDataStatus] = useState<DataStatus>("idle");
   const [dataError, setDataError] = useState<string | null>(null);
   const [payload, setPayload] = useState<AppDataPayload | null>(null);
@@ -75,7 +109,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [gpaPreferences, setGpaPreferences] = useState<GpaPreferences>(
     DEFAULT_GPA_PREFERENCES
   );
+  const [settings, setSettings] = useState<SettingsData>(DEFAULT_SETTINGS_DATA);
+  const [settingsStatus, setSettingsStatus] = useState<DataStatus>("idle");
   const loadStartedRef = useRef(false);
+  const settingsStartedRef = useRef(false);
+  const gpaFallbackRef = useRef(false);
 
   const loadAppData = useCallback(
     async (force = false) => {
@@ -146,6 +184,113 @@ export function AppProvider({ children }: { children: ReactNode }) {
     await loadAppData(true);
   }, [loadAppData]);
 
+  // Settings data (Canvas connection + DB readiness) is preloaded once auth is
+  // ready and cached here, so opening Settings is instant and never refetches.
+  const loadSettingsData = useCallback(
+    async (force = false) => {
+      if (gate.state !== "ready" && gate.state !== "needs_canvas") return;
+      if (settingsStartedRef.current && !force) return;
+
+      settingsStartedRef.current = true;
+      setSettingsStatus("loading");
+
+      // /api/app-data already provides GPA prefs for connected users; only
+      // fetch them here when there's no app-data load (Canvas not connected).
+      const needGpa = gate.state === "needs_canvas";
+
+      try {
+        const requests = [
+          fetch("/api/settings/canvas"),
+          fetch("/api/settings/db-status"),
+        ];
+        if (needGpa) requests.push(fetch("/api/settings/gpa"));
+        const [canvasRes, dbRes, gpaRes] = await Promise.all(requests);
+
+        // The Canvas connection status is load-bearing — it drives the
+        // "connected" vs "connect Canvas" UI. An HTTP error doesn't reject the
+        // fetch, so treat a non-ok response as an error rather than silently
+        // reporting a confident (and possibly wrong) "not connected" default.
+        if (!canvasRes.ok) {
+          settingsStartedRef.current = false;
+          setSettingsStatus("error");
+          return;
+        }
+
+        const next: SettingsData = { ...DEFAULT_SETTINGS_DATA };
+
+        const c = await canvasRes.json();
+        next.hasCredentials = !!c.hasCredentials;
+        next.canvasBaseUrl = c.canvasBaseUrl ?? "";
+
+        if (dbRes.ok) {
+          const db = await dbRes.json();
+          next.dbReady = !!db.ready;
+          next.gpaDbReady = db.gpaReady !== false;
+          if (db.issue === "missing_table" || db.issue === "permission_denied") {
+            next.dbIssue = db.issue;
+          }
+          if (
+            db.gpaIssue === "missing_table" ||
+            db.gpaIssue === "permission_denied"
+          ) {
+            next.gpaIssue = db.gpaIssue;
+          }
+        }
+
+        if (needGpa && gpaRes?.ok) {
+          const gpa = await gpaRes.json();
+          if (gpa.preferences) setGpaPreferences(gpa.preferences);
+        }
+
+        setSettings(next);
+        setSettingsStatus("ready");
+      } catch {
+        settingsStartedRef.current = false;
+        setSettingsStatus("error");
+      }
+    },
+    [gate.state]
+  );
+
+  useEffect(() => {
+    if (gate.state === "ready" || gate.state === "needs_canvas") {
+      void loadSettingsData();
+    } else {
+      settingsStartedRef.current = false;
+      setSettingsStatus("idle");
+      setSettings(DEFAULT_SETTINGS_DATA);
+    }
+  }, [gate.state, loadSettingsData]);
+
+  const refreshSettings = useCallback(async () => {
+    settingsStartedRef.current = false;
+    await loadSettingsData(true);
+  }, [loadSettingsData]);
+
+  // For connected users, GPA preferences ride along on /api/app-data. If that
+  // load fails, fall back to fetching them directly so Settings → GPA never
+  // shows (or lets the user save over) default preferences. Runs once per
+  // failure episode; resets when the user leaves the connected state.
+  useEffect(() => {
+    if (gate.state !== "ready") {
+      gpaFallbackRef.current = false;
+      return;
+    }
+    if (dataStatus !== "error" || gpaFallbackRef.current) return;
+
+    gpaFallbackRef.current = true;
+    void (async () => {
+      try {
+        const res = await fetch("/api/settings/gpa");
+        const data = await res.json();
+        if (data?.preferences) setGpaPreferences(data.preferences);
+      } catch {
+        // Leave defaults and allow a later failure episode to retry.
+        gpaFallbackRef.current = false;
+      }
+    })();
+  }, [gate.state, dataStatus]);
+
   const setHomeLayout = useCallback((layout: HomeLayout) => {
     const normalized = normalizeHomeLayout(layout);
     setHomeLayoutState(normalized);
@@ -202,6 +347,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
       homeLayout,
       setHomeLayout,
       gpaPreferences,
+      setGpaPreferences,
+      settings,
+      settingsStatus,
+      refreshSettings,
       refresh,
       setHorizonDays,
     }),
@@ -215,6 +364,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
       homeLayout,
       setHomeLayout,
       gpaPreferences,
+      setGpaPreferences,
+      settings,
+      settingsStatus,
+      refreshSettings,
       refresh,
       setHorizonDays,
     ]

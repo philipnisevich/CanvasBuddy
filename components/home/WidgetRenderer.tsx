@@ -140,7 +140,7 @@ export default function WidgetRenderer({
       return (
         <WidgetShell compact={compact} preview={preview}>
           <p className="cb-section-label truncate">{course.courseName}</p>
-          <p className="mt-1 font-[family-name:var(--font-heading)] text-2xl font-bold">
+          <p className="mt-1 cb-metric text-2xl font-bold">
             {course.hidden
               ? "—"
               : course.currentScore != null
@@ -220,7 +220,7 @@ export default function WidgetRenderer({
       return (
         <WidgetShell compact={compact} preview={preview}>
           <p className="cb-section-label">Unweighted GPA</p>
-          <p className="mt-1 font-[family-name:var(--font-heading)] text-3xl font-bold">
+          <p className="mt-1 cb-metric text-3xl font-bold">
             {formatGpa(gpa.unweighted)}
           </p>
         </WidgetShell>
@@ -230,7 +230,7 @@ export default function WidgetRenderer({
       return (
         <WidgetShell compact={compact} preview={preview}>
           <p className="cb-section-label">Weighted GPA</p>
-          <p className="mt-1 font-[family-name:var(--font-heading)] text-3xl font-bold">
+          <p className="mt-1 cb-metric text-3xl font-bold">
             {showWeightedGpa(prefs)
               ? formatGpa(gpa.weighted)
               : "—"}
@@ -244,13 +244,13 @@ export default function WidgetRenderer({
           <div className="grid h-full min-h-0 grid-cols-2 items-center gap-3">
             <div className="min-w-0 text-center sm:text-left">
               <p className="cb-section-label">Unweighted</p>
-              <p className="font-[family-name:var(--font-heading)] text-3xl font-bold leading-none">
+              <p className="cb-metric text-3xl font-bold leading-none">
                 {formatGpa(gpa.unweighted)}
               </p>
             </div>
             <div className="min-w-0 text-center sm:text-left">
               <p className="cb-section-label">Weighted</p>
-              <p className="font-[family-name:var(--font-heading)] text-3xl font-bold leading-none">
+              <p className="cb-metric text-3xl font-bold leading-none">
                 {showWeightedGpa(prefs) ? formatGpa(gpa.weighted) : "—"}
               </p>
             </div>
@@ -262,7 +262,7 @@ export default function WidgetRenderer({
       return (
         <WidgetShell compact={compact} preview={preview}>
           <p className="cb-section-label">Term GPA (est.)</p>
-          <p className="mt-1 font-[family-name:var(--font-heading)] text-3xl font-bold leading-none">
+          <p className="mt-1 cb-metric text-3xl font-bold leading-none">
             {formatGpa(gpa.unweighted)}
           </p>
           <p className="mt-1 text-xs text-[var(--muted)]">

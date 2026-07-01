@@ -117,7 +117,7 @@ export default function SupabaseSetupBanner({
   return (
     <div
       role="alert"
-      className="cb-card mb-6 border-[var(--warning)] bg-[var(--warning-soft)] px-4 py-4 text-sm font-medium text-[#854d0e]"
+      className="cb-card mb-6 border-[var(--warning)] bg-[var(--warning-soft)] px-4 py-4 text-sm font-medium text-[var(--warning-ink)]"
     >
       <p className="font-semibold">{title}</p>
       <p className="mt-2">{description}</p>
@@ -143,13 +143,13 @@ export default function SupabaseSetupBanner({
         <li>{step3}</li>
       </ol>
       {target === "canvas" && !showGrants && (
-        <p className="mt-2 text-xs text-[#854d0e]">
+        <p className="mt-2 text-xs text-[var(--warning-ink)]">
           If you already created the table, run only Step 2 (grants) from{" "}
           <code className="font-mono">002_grants.sql</code>.
         </p>
       )}
       {target === "gpa" && !showGrants && (
-        <p className="mt-2 text-xs text-[#854d0e]">
+        <p className="mt-2 text-xs text-[var(--warning-ink)]">
           This matches{" "}
           <code className="font-mono">003_user_gpa_preferences.sql</code> in
           the repo.

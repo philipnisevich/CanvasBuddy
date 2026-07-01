@@ -94,7 +94,6 @@ export default function HomePageContent() {
       showNav
     >
       <PageToolbar
-        label="Home"
         title="Your dashboard"
         description="Customize widgets to see what matters most."
         actions={

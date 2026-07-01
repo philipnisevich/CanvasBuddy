@@ -32,8 +32,8 @@ export default function AppNav() {
             href={href}
             className={`cursor-pointer rounded-[var(--radius)] px-3 py-2 text-sm font-semibold transition-colors duration-200 ${
               active
-                ? "bg-white/15 text-[var(--color-nav-text)]"
-                : "text-[var(--color-nav-muted)] hover:bg-white/10 hover:text-[var(--color-nav-text)]"
+                ? "bg-[var(--accent-soft)] text-[var(--accent-ink)]"
+                : "text-[var(--muted-ink)] hover:bg-[var(--surface-2)] hover:text-[var(--ink)]"
             }`}
             aria-current={active ? "page" : undefined}
           >

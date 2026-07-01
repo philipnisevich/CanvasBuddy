@@ -36,3 +36,7 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# impeccable design tooling (local only — never commit)
+.claude/skills/impeccable/
+.impeccable/

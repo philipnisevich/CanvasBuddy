@@ -2,17 +2,37 @@
 
 import Link from "next/link";
 import type { ReactNode } from "react";
+import { GraduationCap } from "lucide-react";
 import AppShell, { AppShellCentered } from "@/components/ui/AppShell";
 import Alert from "@/components/ui/Alert";
 import OnboardingSteps from "@/components/ui/OnboardingSteps";
 import LoginButton from "@/components/LoginButton";
+import LandingPage from "@/components/landing/LandingPage";
 import type { AppGateState } from "@/hooks/useAppGate";
 
-function PageSkeleton() {
+// Cold-boot splash. Auth is resolved client-side, so the very first paint is
+// always "loading"; showing the full app shell here makes the app nav flash in
+// and out before the real view (e.g. the landing page) resolves. A neutral,
+// logo-only splash on the app canvas is continuous with both the landing page
+// and the signed-in shell, so the boot reads as a calm settle, not a flash.
+function BootSplash() {
   return (
-    <div className="animate-pulse space-y-8">
-      <div className="h-10 w-48 rounded-[var(--radius)] bg-[var(--border)]" />
-      <div className="h-64 rounded-[var(--radius)] bg-[var(--border)]" />
+    <div className="flex min-h-screen items-center justify-center bg-[var(--bg)]">
+      <span
+        className="inline-flex animate-pulse items-center gap-2.5"
+        role="status"
+        aria-label="Loading CanvasBuddy"
+      >
+        <span
+          className="flex h-9 w-9 items-center justify-center rounded-[var(--radius)] bg-[var(--accent)] text-[var(--on-accent)]"
+          aria-hidden
+        >
+          <GraduationCap className="h-5 w-5" strokeWidth={2.25} />
+        </span>
+        <span className="font-[family-name:var(--font-heading)] text-lg font-bold text-[var(--ink)]">
+          CanvasBuddy
+        </span>
+      </span>
     </div>
   );
 }
@@ -48,40 +68,11 @@ export function AppGateShell({
   );
 
   if (state === "loading") {
-    return (
-      <AppShell
-        showNav={showNav}
-        subtitle="Loading your courses…"
-        actions={navActions}
-      >
-        <PageSkeleton />
-      </AppShell>
-    );
+    return <BootSplash />;
   }
 
   if (state === "unauthenticated") {
-    return (
-      <AppShellCentered wide>
-        <div className="text-center">
-          <h1 className="text-3xl font-semibold sm:text-4xl">
-            Your Canvas week at a glance
-          </h1>
-          <p className="cb-prose-muted mx-auto mt-4 max-w-xl">
-            See current grades, what&apos;s due tomorrow, and get study help —
-            all from your normal student Canvas account.
-          </p>
-        </div>
-        <div className="mt-10">
-          <OnboardingSteps current={1} />
-        </div>
-        {errorMessage && <Alert className="mt-8">{errorMessage}</Alert>}
-        <div className="cb-card mt-10 p-8 text-center">
-          <Link href="/login" className="cb-btn-primary mt-6 px-8 py-3">
-            Sign in or create account
-          </Link>
-        </div>
-      </AppShellCentered>
-    );
+    return <LandingPage errorMessage={errorMessage} />;
   }
 
   if (state === "needs_canvas") {

@@ -174,7 +174,7 @@ function GpaStat({
       <p className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">
         {label}
       </p>
-      <p className="mt-1 font-[family-name:var(--font-heading)] text-4xl font-bold tabular-nums text-[var(--color-text)]">
+      <p className="mt-1 cb-metric text-4xl font-bold tabular-nums text-[var(--color-text)]">
         {value}
       </p>
       <p className="mt-1 text-xs text-[var(--muted)]">{scale}</p>
