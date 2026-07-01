@@ -248,10 +248,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
     await loadSettingsData(true);
   }, [loadSettingsData]);
 
-  const updateGpaPreferences = useCallback((prefs: GpaPreferences) => {
-    setGpaPreferences(prefs);
-  }, []);
-
   const setHomeLayout = useCallback((layout: HomeLayout) => {
     const normalized = normalizeHomeLayout(layout);
     setHomeLayoutState(normalized);
@@ -308,7 +304,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       homeLayout,
       setHomeLayout,
       gpaPreferences,
-      setGpaPreferences: updateGpaPreferences,
+      setGpaPreferences,
       settings,
       settingsStatus,
       refreshSettings,
@@ -325,7 +321,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       homeLayout,
       setHomeLayout,
       gpaPreferences,
-      updateGpaPreferences,
+      setGpaPreferences,
       settings,
       settingsStatus,
       refreshSettings,

@@ -30,7 +30,7 @@ function parseSection(value: string | null): SettingsSection {
 }
 
 export default function SettingsPageContent() {
-  const { gate, settings, refreshSettings } = useApp();
+  const { gate, settings, settingsStatus, refreshSettings } = useApp();
   const email = gate.userEmail;
   const [disconnecting, setDisconnecting] = useState(false);
   const [section, setSection] = useState<SettingsSection>("canvas");
@@ -74,7 +74,15 @@ export default function SettingsPageContent() {
     await gate.handleLogout();
   }
 
-  if (gate.state === "loading") {
+  // Hold the skeleton until the preloaded settings (Canvas connection + DB
+  // readiness) have resolved. Rendering earlier would flash the "not connected"
+  // state from DEFAULT_SETTINGS_DATA even for a connected user.
+  const settingsLoading =
+    settingsStatus === "idle" || settingsStatus === "loading";
+  const gateResolved =
+    gate.state === "ready" || gate.state === "needs_canvas";
+
+  if (gate.state === "loading" || (gateResolved && settingsLoading)) {
     return (
       <AppShell
         showNav

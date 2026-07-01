@@ -1,6 +1,6 @@
 ---
 name: CanvasBuddy
-description: A precision-ledger Canvas dashboard — flat hairline surfaces, one ink accent, light + dark.
+description: A precision-ledger Canvas dashboard — flat hairline surfaces, one ink accent, light-only.
 colors:
   accent-ink: "oklch(0.50 0.15 264)"
   accent-forest: "oklch(0.48 0.10 155)"
@@ -13,9 +13,6 @@ colors:
   hairline: "oklch(0.90 0.006 258)"
   hairline-strong: "oklch(0.80 0.012 258)"
   nav-bg: "oklch(0.235 0.022 264)"
-  bg-dark: "oklch(0.20 0.015 262)"
-  surface-dark: "oklch(0.235 0.018 262)"
-  ink-dark: "oklch(0.96 0.005 255)"
   success: "oklch(0.55 0.12 150)"
   warning: "oklch(0.66 0.12 75)"
   danger: "oklch(0.55 0.20 27)"
@@ -112,7 +109,7 @@ CanvasBuddy presents a student's grades, deadlines, and missing work the way a p
 
 Type is a coherent **Source superfamily** in three roles that contrast on silhouette: **Source Serif 4** for headings and titles (scholarly voice), **Source Sans 3** for body and dense UI, and **Source Code Pro** for the large tabular numerics — GPA, counts, grade columns — which read like receipt-precise ledger figures. Surfaces are flat by default; a shadow appears only on true overlays. The result is a credible academic tool a student trusts with their GPA.
 
-The system ships **light and dark** themes and a **user-selectable accent** (Settings → Appearance): **Ink Blue** (default — fountain-pen ink), **Forest Green** (examination green), or **Oxblood** (leather-bound burgundy). The theme is driven by `data-theme` (light/dark) × `data-accent` on `<html>`, applied before first paint by an inline no-flash script and managed by `contexts/ThemeProvider.tsx`. Components read semantic CSS variables, so theme and accent propagate everywhere automatically.
+The system is **light-only** and ships a **user-selectable accent** (Settings → Appearance): **Ink Blue** (default — fountain-pen ink), **Forest Green** (examination green), or **Oxblood** (leather-bound burgundy). The accent is driven by `data-accent` on `<html>` (with `data-theme` pinned to `light`), applied before first paint by an inline no-flash script and managed by `contexts/ThemeProvider.tsx`. Components read semantic CSS variables, so the accent propagates everywhere automatically.
 
 This system explicitly rejects PRODUCT.md's anti-references: the **cluttered, institutional density of Canvas LMS itself**; the **cold navy-and-gray of generic enterprise SaaS dashboards**; anything **childish, gamified, or game-like**; and **anxiety theater** — walls of alerts that punish rather than inform. The accent is a scalpel, not a fire alarm.
 
@@ -120,27 +117,27 @@ This system explicitly rejects PRODUCT.md's anti-references: the **cluttered, in
 - Near-monochrome cool-slate field; one ink accent for action and current state only.
 - Structure by 1px hairlines; flat surfaces, shadow reserved for overlays.
 - Source superfamily in three silhouettes: serif heads, sans UI, mono numerics.
-- Light + dark, plus three selectable accents (ink / forest / oxblood).
+- Light-only, with three selectable accents (ink / forest / oxblood).
 - Tight ~6px radii; calm 160ms state-only motion.
 
 ## 2. Colors
 
-A near-monochrome cool-slate system carrying exactly one committed accent. All values are authored in **OKLCH**; the accent and every neutral are theme-aware.
+A near-monochrome cool-slate system carrying exactly one committed accent. All values are authored in **OKLCH**.
 
 ### Primary — the accent (selectable; default Ink Blue)
-- **Ink Blue** (`oklch(0.50 0.15 264)` light / `oklch(0.70 0.13 264)` dark): the default signature — a deep fountain-pen ink that brightens to luminous periwinkle on the dark canvas. Drives primary actions, links, focus rings, the current selection/active state, and metric highlights. `--accent-hover` / `--accent-active` deepen (light) or brighten (dark); `--accent-soft` is the faint wash behind active chips, the bot avatar, and selected rows; `--accent-ink` is the readable accent-tone text on that wash; `--on-accent` is the text on a solid accent fill (light in light theme, dark in dark theme).
-- **Forest Green** (`oklch(0.48 0.10 155)`) and **Oxblood** (`oklch(0.45 0.14 18)`) are the two alternate accents, each with the same light/dark + soft/ink/on-accent ramp.
+- **Ink Blue** (`oklch(0.50 0.15 264)`): the default signature — a deep fountain-pen ink. Drives primary actions, links, focus rings, the current selection/active state, and metric highlights. `--accent-hover` / `--accent-active` deepen it; `--accent-soft` is the faint wash behind active chips, the bot avatar, and selected rows; `--accent-ink` is the readable accent-tone text on that wash; `--on-accent` is the text on a solid accent fill.
+- **Forest Green** (`oklch(0.48 0.10 155)`) and **Oxblood** (`oklch(0.45 0.14 18)`) are the two alternate accents, each with the same soft/ink/on-accent ramp.
 
-### Neutral (theme-aware)
-- **Ink** (`oklch(0.255 0.02 262)` light / `oklch(0.96 0.005 255)` dark): primary text. A cool near-black, never pure black.
-- **Muted Ink** (`oklch(0.495 0.018 260)` / `oklch(0.71 0.016 258)`): secondary text, captions, placeholders. Verified ≥4.5:1 on its canvas in both themes.
-- **Background** (`oklch(0.975 0.004 255)` / `oklch(0.20 0.015 262)`): the flat app canvas — cool near-white, or a deep ink-slate "desk at night."
-- **Surface / Surface-2 / Surface-3**: white → faint-gray inset layers (light); lifted slate layers (dark).
-- **Hairline** (`oklch(0.90 0.006 258)` / `oklch(0.32 0.02 262)`) and **Hairline-Strong**: the 1px borders that carry all structure.
-- **Nav** (`oklch(0.235 0.022 264)`): the header chrome is an intentionally dark ink-slate in **both** themes — a consistent ledger header anchor.
+### Neutral
+- **Ink** (`oklch(0.255 0.02 262)`): primary text. A cool near-black, never pure black.
+- **Muted Ink** (`oklch(0.495 0.018 260)`): secondary text, captions, placeholders. Verified ≥4.5:1 on its canvas.
+- **Background** (`oklch(0.975 0.004 255)`): the flat app canvas — a cool near-white.
+- **Surface / Surface-2 / Surface-3**: white → faint-gray inset layers.
+- **Hairline** (`oklch(0.90 0.006 258)`) and **Hairline-Strong**: the 1px borders that carry all structure.
+- **Nav** (`oklch(0.235 0.022 264)`): the dark ink-slate token retained for the chat avatar and any dark chrome — a consistent ledger anchor.
 
-### Semantic (state only, theme-tuned)
-- **Success** green, **Warning** amber, **Danger** red — each with a `-soft` background wash and a readable `-ink` text tone, retuned per theme. Danger is its **own** red, distinct from the (blue/green/oxblood) accent.
+### Semantic (state only)
+- **Success** green, **Warning** amber, **Danger** red — each with a `-soft` background wash and a readable `-ink` text tone. Danger is its **own** red, distinct from the (blue/green/oxblood) accent.
 
 ### Named Rules
 **The Scalpel Rule.** The accent marks action and genuine state only — primary actions, current selection, focus, links. Never decoration, never a divider. Target ≤10% accent coverage on any screen.
@@ -173,7 +170,7 @@ A near-monochrome cool-slate system carrying exactly one committed accent. All v
 ### Shadow Vocabulary
 - **`--shadow-clay`** (near-flat contact): default card/panel — almost imperceptible, the hairline does the work.
 - **`--shadow-clay-pressed`** (inset): pressed primary button.
-- **`--shadow-overlay`** (`0 10px 30px …`, stronger in dark): the only true elevation — overlays only.
+- **`--shadow-overlay`** (`0 10px 30px …`): the only true elevation — overlays only.
 
 ### Named Rules
 **The Flat-By-Default Rule.** Resting surfaces are flat. If you reach for a drop shadow on a card, stop — use a hairline. Shadow means "this floats above the page," nothing less.
@@ -183,11 +180,11 @@ A near-monochrome cool-slate system carrying exactly one committed accent. All v
 ## 5. Components
 
 ### Buttons (radius 6px, 1px borders, 160ms ease-out)
-- **Primary** (`cb-btn-primary`): solid accent fill, `--on-accent` text. Hover/active deepen (light) or brighten (dark); pressed adds an inset shadow; disabled drops to 0.5 opacity.
+- **Primary** (`cb-btn-primary`): solid accent fill, `--on-accent` text. Hover/active deepen the fill; pressed adds an inset shadow; disabled drops to 0.5 opacity.
 - **Secondary** (`cb-btn-secondary`): transparent fill, 1px accent border, accent-tone text; hover washes `--accent-soft`.
 - **Ghost** (`cb-btn-ghost`): white/surface fill, hairline-strong border, ink text — the quiet default. Hover darkens border + fills surface-2.
 - **Danger** (`cb-btn-danger`): transparent, danger border + danger-ink text; hover washes danger-soft. Destructive actions only.
-- **Nav Secondary** (`cb-btn-secondary-nav`) and **Theme Toggle**: translucent-white-on-dark, for use inside the dark header only.
+- **Nav Secondary** (`cb-btn-secondary-nav`): a light-surface button (hairline-strong border, ink text) for header account actions — matches the ghost style.
 - **Icon button** (`cb-icon-btn`, `--danger` variant): square, hairline-strong border. Lucide icons only.
 
 ### Chips (`cb-chip`, `--active`)
@@ -199,12 +196,11 @@ Radius 8px, 1px hairline, flat. `-interactive` adds `cursor: pointer` and a 1px 
 ### Inputs (`cb-input`)
 White/surface fill, 1px hairline-strong border, 6px radius. **Focus:** accent border + 3px `--accent-ring` glow — the same focus language as the global `:focus-visible` (2px accent outline).
 
-### Navigation (`cb-nav-shell`)
-A dark ink-slate header bar in both themes with a faint translucent-white bottom hairline (no glass, no blur). Capped at 72rem. Holds the wordmark, page nav, account actions, and the **theme toggle** (sun/dark). Mobile collapses; content never hides behind it.
+### Navigation
+A sticky light header on the app canvas (`bg`) with a 1px hairline bottom border (no glass, no blur). Capped at 72rem. Holds the wordmark, page nav, and account actions. Mobile collapses; content never hides behind it.
 
-### Theme & Accent controls
-- **Theme toggle** (`components/ui/ThemeToggle.tsx`) in the nav flips light/dark.
-- **Appearance panel** (`components/settings/AppearanceSettings.tsx`, Settings → Appearance) offers Light / Dark / System and the three accent swatches. State lives in `ThemeProvider`, persisted to `localStorage` (`cb-theme-mode`, `cb-accent`).
+### Accent controls
+- **Appearance panel** (`components/settings/AppearanceSettings.tsx`, Settings → Appearance) offers the three accent swatches. State lives in `ThemeProvider`, persisted to `localStorage` (`cb-accent`).
 
 ### AI Chat (signature)
 A 48rem thread: assistant rows are hairline-divided full-width prose with an accent-soft bot avatar; user rows are right-aligned `--accent-soft` bubbles with accent-ink text and an asymmetric radius. Composer is a rounded field with a focus-within accent ring and a square accent send button. Empty state centers an accent-soft icon disc with a teaching prompt.
@@ -215,8 +211,8 @@ A 48rem thread: assistant rows are hairline-divided full-width prose with an acc
 - **Do** keep the accent for action and genuine state only — primary actions, current selection, focus, links. ≤10% coverage (The Scalpel Rule).
 - **Do** draw structure with 1px hairlines; keep resting surfaces flat (The Hairline / Flat-By-Default Rules).
 - **Do** use the three silhouettes correctly: serif heads, sans reads, mono (`.cb-metric`) for numerics.
-- **Do** read theme-aware semantic vars (`--ink`, `--muted`, `--surface`, `--accent`, `--accent-soft`, `--danger-ink`…) so light, dark, and every accent re-skin automatically. Never hardcode a hex.
-- **Do** verify ≥4.5:1 for `--muted-ink` text and placeholders in **both** themes; pair color with text/icon for state, never color alone.
+- **Do** read the semantic vars (`--ink`, `--muted`, `--surface`, `--accent`, `--accent-soft`, `--danger-ink`…) so every accent re-skins automatically. Never hardcode a hex.
+- **Do** verify ≥4.5:1 for `--muted-ink` text and placeholders; pair color with text/icon for state, never color alone.
 - **Do** keep transitions 150–250ms ease-out and honor `prefers-reduced-motion`; give every control `cursor: pointer` and a visible accent `:focus-visible` ring.
 
 ### Don't:

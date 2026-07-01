@@ -60,9 +60,9 @@ export default function AppShell({
               {actions}
             </nav>
           </div>
-          {showNav && (
+          {(showNav || subtitle) && (
             <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 border-t border-[var(--hairline)] py-1.5">
-              <AppNav />
+              {showNav ? <AppNav /> : <span />}
               {subtitle && (
                 <p className="hidden truncate text-sm font-medium text-[var(--muted-ink)] sm:block">
                   {subtitle}
