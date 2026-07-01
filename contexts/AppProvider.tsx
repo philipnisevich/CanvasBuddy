@@ -113,6 +113,7 @@ export function AppProvider({
   const [settingsStatus, setSettingsStatus] = useState<DataStatus>("idle");
   const loadStartedRef = useRef(false);
   const settingsStartedRef = useRef(false);
+  const gpaFallbackRef = useRef(false);
 
   const loadAppData = useCallback(
     async (force = false) => {
@@ -257,6 +258,30 @@ export function AppProvider({
     settingsStartedRef.current = false;
     await loadSettingsData(true);
   }, [loadSettingsData]);
+
+  // For connected users, GPA preferences ride along on /api/app-data. If that
+  // load fails, fall back to fetching them directly so Settings → GPA never
+  // shows (or lets the user save over) default preferences. Runs once per
+  // failure episode; resets when the user leaves the connected state.
+  useEffect(() => {
+    if (gate.state !== "ready") {
+      gpaFallbackRef.current = false;
+      return;
+    }
+    if (dataStatus !== "error" || gpaFallbackRef.current) return;
+
+    gpaFallbackRef.current = true;
+    void (async () => {
+      try {
+        const res = await fetch("/api/settings/gpa");
+        const data = await res.json();
+        if (data?.preferences) setGpaPreferences(data.preferences);
+      } catch {
+        // Leave defaults and allow a later failure episode to retry.
+        gpaFallbackRef.current = false;
+      }
+    })();
+  }, [gate.state, dataStatus]);
 
   const setHomeLayout = useCallback((layout: HomeLayout) => {
     const normalized = normalizeHomeLayout(layout);
