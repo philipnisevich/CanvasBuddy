@@ -77,7 +77,10 @@ export function useAppGate(initial?: InitialGate) {
 
   const handleLogout = useCallback(async () => {
     await fetch("/api/auth/logout", { method: "POST" });
-    setState("unauthenticated");
+    // Show the neutral boot splash — not the "unauthenticated" landing page —
+    // while the browser navigates to the sign-in page. Rendering the landing
+    // view here would flash it for a frame before /login loads.
+    setState("loading");
     window.location.href = "/login";
   }, []);
 

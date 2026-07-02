@@ -110,8 +110,12 @@
   --accent-ring: oklch(0.45 0.14 18 / 0.35);
 }
 
-/* Accent legacy aliases (depend on the resolved --accent-* above). */
-:root {
+/* Accent legacy aliases (depend on the resolved --accent-* above). Scoped to
+   any [data-accent] element — not just :root — so a subtree that pins its own
+   accent (e.g. the always-blue landing/sign-in shell) recomputes these aliases
+   from its local --accent instead of inheriting the html-level one. */
+:root,
+[data-accent] {
   --color-primary: var(--accent);
   --color-primary-hover: var(--accent-hover);
   --color-primary-dark: var(--accent-active);

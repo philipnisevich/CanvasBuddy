@@ -6,8 +6,12 @@ import Alert from "@/components/ui/Alert";
 
 type AuthMode = "signin" | "signup";
 
-export default function AuthForm() {
-  const [mode, setMode] = useState<AuthMode>("signin");
+export default function AuthForm({
+  initialMode = "signin",
+}: {
+  initialMode?: AuthMode;
+}) {
+  const [mode, setMode] = useState<AuthMode>(initialMode);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");

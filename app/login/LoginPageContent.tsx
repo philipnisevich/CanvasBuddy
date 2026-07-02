@@ -1,9 +1,5 @@
-"use client";
-
-import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
-import { ArrowLeft, GraduationCap, ShieldCheck } from "lucide-react";
+import { GraduationCap, ShieldCheck } from "lucide-react";
 import Alert from "@/components/ui/Alert";
 import LedgerPreview from "@/components/landing/LedgerPreview";
 import AuthForm from "@/components/AuthForm";
@@ -15,20 +11,32 @@ const STEPS = [
   "See grades, deadlines, and study help",
 ];
 
-export default function LoginPageContent() {
-  const searchParams = useSearchParams();
-  const forgotMode = searchParams.get("forgot") === "1";
-  const [callbackError, setCallbackError] = useState<string | null>(null);
+export default function LoginPageContent({
+  initialMode = "signin",
+  forgotMode = false,
+  callbackError = null,
+}: {
+  initialMode?: "signin" | "signup";
+  forgotMode?: boolean;
+  callbackError?: string | null;
+}) {
+  const heading = forgotMode
+    ? "Reset your password"
+    : initialMode === "signup"
+      ? "Create your CanvasBuddy account"
+      : "Sign in to CanvasBuddy";
 
-  useEffect(() => {
-    const err = searchParams.get("error");
-    if (err === "auth_callback_failed") {
-      setCallbackError("Sign-in link expired or was invalid. Please try again.");
-    }
-  }, [searchParams]);
+  const subheading = forgotMode
+    ? "We'll email you a link to set a new password."
+    : initialMode === "signup"
+      ? "Start with your school email, then connect Canvas in Settings."
+      : "Create an account or sign in, then connect Canvas in Settings.";
 
   return (
-    <div className="min-h-screen bg-[var(--bg)]">
+    // The sign-in / create-account page is a public surface, so it always uses
+    // the default Ink Blue accent rather than the visitor's saved accent (which
+    // only skins the in-app pages). data-accent pins the accent for this subtree.
+    <div data-accent="ink" className="min-h-screen bg-[var(--bg)]">
       <a href="#main-content" className="cb-skip-link">
         Skip to main content
       </a>
@@ -48,10 +56,6 @@ export default function LoginPageContent() {
             <span className="font-[family-name:var(--font-heading)] text-lg font-bold text-[var(--ink)]">
               CanvasBuddy
             </span>
-          </Link>
-          <Link href="/" className="cb-btn-ghost hidden sm:inline-flex">
-            <ArrowLeft className="h-4 w-4" aria-hidden />
-            Home
           </Link>
         </div>
       </header>
@@ -107,18 +111,18 @@ export default function LoginPageContent() {
               <p className="cb-section-label">Step 1 of 3</p>
             </div>
             <h2 className="mt-2 font-[family-name:var(--font-heading)] text-2xl font-bold text-[var(--ink)] sm:text-[1.75rem]">
-              {forgotMode ? "Reset your password" : "Sign in to CanvasBuddy"}
+              {heading}
             </h2>
-            <p className="mt-2 text-sm text-[var(--muted-ink)]">
-              {forgotMode
-                ? "We'll email you a link to set a new password."
-                : "Create an account or sign in, then connect Canvas in Settings."}
-            </p>
+            <p className="mt-2 text-sm text-[var(--muted-ink)]">{subheading}</p>
 
             {callbackError && <Alert className="mt-6">{callbackError}</Alert>}
 
             <div className="cb-card mt-6 p-6 sm:p-7">
-              {forgotMode ? <ForgotPasswordForm /> : <AuthForm />}
+              {forgotMode ? (
+                <ForgotPasswordForm />
+              ) : (
+                <AuthForm initialMode={initialMode} />
+              )}
             </div>
 
             <p className="mt-6 text-center text-sm text-[var(--muted-ink)] lg:hidden">

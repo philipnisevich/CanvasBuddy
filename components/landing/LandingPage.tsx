@@ -60,7 +60,10 @@ export default function LandingPage({
   errorMessage?: string | null;
 }) {
   return (
-    <div className="min-h-screen bg-[var(--bg)]">
+    // The public landing page always renders in the default Ink Blue accent,
+    // regardless of the signed-in user's chosen accent (which only applies to
+    // the in-app pages). data-accent pins the accent tokens for this subtree.
+    <div data-accent="ink" className="min-h-screen bg-[var(--bg)]">
       <a href="#main-content" className="cb-skip-link">
         Skip to main content
       </a>
@@ -83,7 +86,7 @@ export default function LandingPage({
             <Link href="/login" className="cb-btn-ghost hidden sm:inline-flex">
               Sign in
             </Link>
-            <Link href="/login" className="cb-btn-primary">
+            <Link href="/login?mode=signup" className="cb-btn-primary">
               Get started
             </Link>
           </div>
@@ -110,7 +113,7 @@ export default function LandingPage({
               </p>
               <div className="mt-8 flex flex-wrap items-center gap-3">
                 <Link
-                  href="/login"
+                  href="/login?mode=signup"
                   className="cb-btn-primary px-5 py-2.5 text-[0.9375rem]"
                 >
                   Get started
@@ -252,7 +255,7 @@ export default function LandingPage({
             </p>
             <div className="mt-8 flex justify-center">
               <Link
-                href="/login"
+                href="/login?mode=signup"
                 className="cb-btn-primary px-6 py-3 text-[0.9375rem]"
               >
                 Get started
