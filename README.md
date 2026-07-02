@@ -166,8 +166,10 @@ Canvas tokens stay on the server. The AI agent fetches live data via tools; only
 
 ## Scripts
 
-| Command         | Description              |
-|-----------------|--------------------------|
-| `npm run dev`   | Start development server |
-| `npm run build` | Production build         |
-| `npm start`     | Run production server    |
+| Command         | Description                                         |
+|-----------------|-----------------------------------------------------|
+| `npm run dev`   | Start development server                            |
+| `npm run build` | Production build (main correctness check)           |
+| `npm start`     | Run production server                               |
+| `npm run lint`  | ESLint (next/core-web-vitals + next/typescript)     |
+| `npm run clean` | `rm -rf .next` — fixes stale-cache build errors     |

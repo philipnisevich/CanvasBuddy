@@ -77,10 +77,11 @@ export function useAppGate(initial?: InitialGate) {
 
   const handleLogout = useCallback(async () => {
     await fetch("/api/auth/logout", { method: "POST" });
-    // Show the neutral boot splash — not the "unauthenticated" landing page —
-    // while the browser navigates to the sign-in page. Rendering the landing
-    // view here would flash it for a frame before /login loads.
-    setState("loading");
+    // Navigate straight to the sign-in page. We intentionally do NOT flip the
+    // gate state first: setting "loading" would tear down the current view and
+    // flash the boot splash, and setting "unauthenticated" would flash the
+    // landing page. Leaving the current view in place lets the browser swap it
+    // out only once /login has loaded, so sign-out reads as a single clean jump.
     window.location.href = "/login";
   }, []);
 

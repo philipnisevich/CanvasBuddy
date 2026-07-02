@@ -8,7 +8,8 @@ import GpaCalculator from "@/components/GpaCalculator";
 import { useApp } from "@/contexts/AppProvider";
 
 export default function GradesPageContent() {
-  const { gate, gradesData, dataStatus, dataError, refresh } = useApp();
+  const { gate, gradesData, dataStatus, dataError, refresh, refreshing } =
+    useApp();
 
   const showDataLoading =
     gate.state === "ready" && dataStatus === "loading" && !gradesData;
@@ -27,7 +28,12 @@ export default function GradesPageContent() {
         title="Grades & GPA"
         description="Current grades from your active Canvas courses."
         actions={
-          <button type="button" onClick={refresh} className="cb-btn-ghost">
+          <button
+            type="button"
+            onClick={refresh}
+            disabled={refreshing}
+            className="cb-btn-ghost"
+          >
             Refresh data
           </button>
         }

@@ -17,6 +17,7 @@ export default function UpcomingPageContent() {
     dataStatus,
     dataError,
     refresh,
+    refreshing,
     setHorizonDays,
     payload,
   } = useApp();
@@ -50,7 +51,12 @@ export default function UpcomingPageContent() {
         title="Upcoming"
         description="Due tomorrow plus assignments in the next few days."
         actions={
-          <button type="button" onClick={refresh} className="cb-btn-ghost">
+          <button
+            type="button"
+            onClick={refresh}
+            disabled={refreshing}
+            className="cb-btn-ghost"
+          >
             Refresh data
           </button>
         }

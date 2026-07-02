@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import { AppGateShell } from "@/components/AppGate";
 import Alert from "@/components/ui/Alert";
 import PageToolbar from "@/components/ui/PageToolbar";
@@ -8,17 +7,8 @@ import MissingAssignmentList from "@/components/missing/MissingAssignmentList";
 import { useApp } from "@/contexts/AppProvider";
 
 export default function MissingPageContent() {
-  const { gate, missingData, dataStatus, dataError, refresh } = useApp();
-  const [refreshing, setRefreshing] = useState(false);
-
-  async function handleRefresh() {
-    setRefreshing(true);
-    try {
-      await refresh();
-    } finally {
-      setRefreshing(false);
-    }
-  }
+  const { gate, missingData, dataStatus, dataError, refresh, refreshing } =
+    useApp();
 
   const showDataLoading =
     gate.state === "ready" && dataStatus === "loading" && !missingData;
@@ -39,11 +29,11 @@ export default function MissingPageContent() {
         actions={
           <button
             type="button"
-            onClick={handleRefresh}
+            onClick={refresh}
             disabled={refreshing}
             className="cb-btn-ghost"
           >
-            {refreshing ? "Refreshing…" : "Refresh"}
+            Refresh
           </button>
         }
       />

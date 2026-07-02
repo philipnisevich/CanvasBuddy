@@ -1,5 +1,8 @@
 # Dashboard Page Overrides
 
+> ⚠️ **STALE — superseded by root `DESIGN.md`.** These page overrides predate the "Ledger" precision design system and no longer reflect the shipping UI. Use `DESIGN.md` as the single source of truth.
+
+
 > **PROJECT:** CanvasBuddy
 > **Generated:** 2026-05-21 08:32:32
 > **Page Type:** Dashboard / Data View

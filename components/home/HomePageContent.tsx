@@ -14,8 +14,16 @@ import { normalizeHomeLayout, type HomeLayout } from "@/lib/home-layout";
 
 export default function HomePageContent() {
   const app = useApp();
-  const { gate, homeData, homeLayout, setHomeLayout, dataStatus, dataError, refresh } =
-    app;
+  const {
+    gate,
+    homeData,
+    homeLayout,
+    setHomeLayout,
+    dataStatus,
+    dataError,
+    refresh,
+    refreshing,
+  } = app;
 
   const [editMode, setEditMode] = useState(false);
   const [pickerOpen, setPickerOpen] = useState(false);
@@ -102,6 +110,7 @@ export default function HomePageContent() {
               <button
                 type="button"
                 onClick={refresh}
+                disabled={refreshing}
                 className="cb-btn-ghost"
                 title="Reload Canvas data"
               >

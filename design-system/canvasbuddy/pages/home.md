@@ -1,5 +1,8 @@
 # Home Page Overrides
 
+> ⚠️ **STALE — superseded by root `DESIGN.md`.** These page overrides predate the "Ledger" precision design system and no longer reflect the shipping UI. Use `DESIGN.md` as the single source of truth.
+
+
 > **PROJECT:** CanvasBuddy — widget dashboard
 
 - **Layout:** Fixed unit grid — 4 columns on `md+`, 2 columns on small screens. Row height `--home-unit-h` (7.5rem). Widget footprints are preset only: 1×1, 1×2, 2×1, 2×2, 2×3 (catalog `defaultSize`).

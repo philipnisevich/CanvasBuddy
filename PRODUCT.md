@@ -18,7 +18,7 @@ CanvasBuddy reads a student's live Canvas data (grades, due dates, missing work)
 
 Sharp and academic. Serious, precise, trustworthy — a professional tool a student is comfortable handing their GPA to. Calm and data-forward rather than warm-and-fuzzy: it respects the user's time and intelligence, presents numbers with confidence, and never performs cuteness. Three words: **precise, trustworthy, calm.**
 
-Note a real tension to resolve in DESIGN.md: the current implementation leans playful (claymorphism surfaces, Baloo 2 / Comic Neue type). The stated product direction is the opposite end — sharper, more academic, less soft. Future visual work should pull toward credibility and clarity, not whimsy. Keep approachability in the *clarity and calm*, not in cartoonishness.
+This direction is realized in the current implementation via the **"Ledger" precision design system** (canonical spec: root `DESIGN.md`) — flat hairline surfaces, a single selectable ink accent, and the Source superfamily (Source Serif 4 headings / Source Sans 3 UI / Source Code Pro numerics), light-only. An earlier build leaned playful (claymorphism surfaces, Baloo 2 / Comic Neue type); that has been fully replaced. Future visual work should stay pulled toward credibility and clarity, not whimsy — keep approachability in the *clarity and calm*, not in cartoonishness.
 
 ## Anti-references
 

@@ -1,5 +1,7 @@
 # Design System Master File
 
+> ⚠️ **STALE — SUPERSEDED BY `DESIGN.md`.** This file (and every `design-system/canvasbuddy/**` file) predates the current **"Ledger" precision design system** and describes an earlier look that no longer ships: Canvas-red / gold buttons, box-shadow claymorphism cards, "Exaggerated Minimalism." The app is now flat hairline surfaces, a single selectable ink accent (ink / forest / oxblood), and the Source superfamily, light-only. **Use root `DESIGN.md` as the single source of truth for all UI/UX work.** These files are retained only for historical reference.
+
 > **LOGIC:** When building a specific page, first check `design-system/pages/[page-name].md`.
 > If that file exists, its rules **override** this Master file.
 > If not, strictly follow the rules below.

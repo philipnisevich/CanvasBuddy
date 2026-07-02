@@ -35,6 +35,7 @@ import {
   type AppGateState,
   type InitialGate,
 } from "@/hooks/useAppGate";
+import RefreshToast from "@/components/ui/RefreshToast";
 
 const LAYOUT_STORAGE_KEY = "canvasbuddy-home-layout";
 
@@ -74,6 +75,7 @@ interface AppContextValue {
   };
   dataStatus: DataStatus;
   dataError: string | null;
+  refreshing: boolean;
   payload: AppDataPayload | null;
   homeData: HomeData | null;
   missingData: MissingPageData | null;
@@ -111,17 +113,23 @@ export function AppProvider({
   );
   const [settings, setSettings] = useState<SettingsData>(DEFAULT_SETTINGS_DATA);
   const [settingsStatus, setSettingsStatus] = useState<DataStatus>("idle");
+  const [refreshing, setRefreshing] = useState(false);
+  const refreshingRef = useRef(false);
   const loadStartedRef = useRef(false);
   const settingsStartedRef = useRef(false);
   const gpaFallbackRef = useRef(false);
 
   const loadAppData = useCallback(
-    async (force = false) => {
+    async (opts?: { force?: boolean; silent?: boolean }) => {
+      const force = opts?.force ?? false;
+      const silent = opts?.silent ?? false;
       if (gate.state !== "ready") return;
       if (loadStartedRef.current && !force) return;
 
       loadStartedRef.current = true;
-      setDataStatus("loading");
+      // A silent load (manual refresh) keeps the current page content on screen
+      // and shows the RefreshToast instead of blanking into loading skeletons.
+      if (!silent) setDataStatus("loading");
       setDataError(null);
 
       const tz = gate.getTimezone();
@@ -180,8 +188,16 @@ export function AppProvider({
   }, [gate.state, loadAppData]);
 
   const refresh = useCallback(async () => {
+    if (refreshingRef.current) return;
+    refreshingRef.current = true;
+    setRefreshing(true);
     loadStartedRef.current = false;
-    await loadAppData(true);
+    try {
+      await loadAppData({ force: true, silent: true });
+    } finally {
+      refreshingRef.current = false;
+      setRefreshing(false);
+    }
   }, [loadAppData]);
 
   // Settings data (Canvas connection + DB readiness) is preloaded once auth is
@@ -339,6 +355,7 @@ export function AppProvider({
       },
       dataStatus,
       dataError,
+      refreshing,
       payload,
       homeData,
       missingData: payload?.missing ?? null,
@@ -359,6 +376,7 @@ export function AppProvider({
       payload,
       dataStatus,
       dataError,
+      refreshing,
       homeData,
       gradesData,
       homeLayout,
@@ -373,7 +391,12 @@ export function AppProvider({
     ]
   );
 
-  return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
+  return (
+    <AppContext.Provider value={value}>
+      {children}
+      <RefreshToast show={refreshing} />
+    </AppContext.Provider>
+  );
 }
 
 export function useApp(): AppContextValue {

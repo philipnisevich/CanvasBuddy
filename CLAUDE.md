@@ -71,3 +71,13 @@ Migrations in `supabase/migrations/` are **applied manually** in the Supabase SQ
 ## Environment
 
 Copy `.env.example` → `.env.local`. Required for sign-up + AI: `SESSION_SECRET` (≥32 chars), `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY` (server-only), `BREVO_API_KEY`, `BREVO_SENDER_EMAIL`, `ANTHROPIC_API_KEY`. OAuth ("Sign in with Canvas") additionally needs `CANVAS_BASE_URL`, `CANVAS_CLIENT_ID`, `CANVAS_CLIENT_SECRET`, `CANVAS_REDIRECT_URI`. Set `NEXT_PUBLIC_SITE_URL` in production so confirmation emails use the right domain. `.env.local` is not deployed — set the same vars in the host. Check readiness at `GET /api/auth/signup/status`.
+
+## graphify
+
+This project has a knowledge graph at graphify-out/ with god nodes, community structure, and cross-file relationships.
+
+Rules:
+- For codebase questions, first run `graphify query "<question>"` when graphify-out/graph.json exists. Use `graphify path "<A>" "<B>"` for relationships and `graphify explain "<concept>"` for focused concepts. These return a scoped subgraph, usually much smaller than GRAPH_REPORT.md or raw grep output.
+- If graphify-out/wiki/index.md exists, use it for broad navigation instead of raw source browsing.
+- Read graphify-out/GRAPH_REPORT.md only for broad architecture review or when query/path/explain do not surface enough context.
+- After modifying code, run `graphify update .` to keep the graph current (AST-only, no API cost).
