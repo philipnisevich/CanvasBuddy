@@ -272,9 +272,19 @@ export default function LandingPage({
             <GraduationCap className="h-4 w-4 text-[var(--accent-ink)]" aria-hidden />
             CanvasBuddy
           </span>
-          <span>
-            Uses your student Canvas account — not an administrator login.
-          </span>
+          <div className="flex flex-col items-center gap-3 sm:flex-row sm:gap-6">
+            <span>
+              Uses your student Canvas account — not an administrator login.
+            </span>
+            <span className="flex gap-4">
+              <Link href="/privacy" className="cb-link">
+                Privacy
+              </Link>
+              <Link href="/terms" className="cb-link">
+                Terms
+              </Link>
+            </span>
+          </div>
         </div>
       </footer>
     </div>

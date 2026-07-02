@@ -347,7 +347,8 @@ export default function AssignmentAssistant({
           </button>
         </div>
         <p className="cb-chat-composer-hint">
-          Enter to send · Shift+Enter for new line
+          Enter to send · Shift+Enter for new line · AI-generated (Anthropic) —
+          may be inaccurate; verify against Canvas
         </p>
       </form>
     </section>

@@ -15,6 +15,7 @@ export default function AuthForm({
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [agreed, setAgreed] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -26,6 +27,13 @@ export default function AuthForm({
 
     if (mode === "signup" && password !== confirmPassword) {
       setError("Passwords do not match. Please re-enter them.");
+      return;
+    }
+
+    if (mode === "signup" && !agreed) {
+      setError(
+        "Please confirm you are at least 13 and agree to the Terms and Privacy Policy."
+      );
       return;
     }
 
@@ -77,6 +85,7 @@ export default function AuthForm({
           onClick={() => {
             setMode("signin");
             setConfirmPassword("");
+            setAgreed(false);
             setError(null);
             setMessage(null);
           }}
@@ -91,6 +100,7 @@ export default function AuthForm({
           onClick={() => {
             setMode("signup");
             setConfirmPassword("");
+            setAgreed(false);
             setError(null);
             setMessage(null);
           }}
@@ -141,6 +151,28 @@ export default function AuthForm({
             className="cb-input mt-1.5"
             placeholder="Re-enter your password"
           />
+        </label>
+      )}
+
+      {mode === "signup" && (
+        <label className="mt-4 flex items-start gap-2.5 text-sm text-[var(--muted-ink)]">
+          <input
+            type="checkbox"
+            checked={agreed}
+            onChange={(e) => setAgreed(e.target.checked)}
+            className="mt-0.5 h-4 w-4 shrink-0 cursor-pointer accent-[var(--accent)]"
+          />
+          <span>
+            I am at least 13 years old and agree to the{" "}
+            <Link href="/terms" target="_blank" className="cb-link">
+              Terms of Service
+            </Link>{" "}
+            and{" "}
+            <Link href="/privacy" target="_blank" className="cb-link">
+              Privacy Policy
+            </Link>
+            .
+          </span>
         </label>
       )}
 

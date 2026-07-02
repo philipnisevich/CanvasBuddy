@@ -23,6 +23,108 @@ export default function AccountPasswordSection({
       <ChangePasswordForm hidden={recoveryMode} />
 
       <SendPasswordResetEmailForm email={email} />
+
+      <DeleteAccountSection />
+    </div>
+  );
+}
+
+function DeleteAccountSection() {
+  const [open, setOpen] = useState(false);
+  const [confirmText, setConfirmText] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+
+  function closeForm() {
+    setOpen(false);
+    setConfirmText("");
+    setError(null);
+  }
+
+  async function handleDelete() {
+    setError(null);
+    setSubmitting(true);
+    try {
+      const res = await fetch("/api/settings/account", { method: "DELETE" });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        setError(data.message ?? "Could not delete your account.");
+        return;
+      }
+      // Account and all associated data are gone — send them to the landing page.
+      window.location.href = "/";
+    } catch {
+      setError("Something went wrong. Please try again.");
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  return (
+    <div className="border-t border-[var(--border)] pt-6">
+      <div className="cb-settings-section-head">
+        <div>
+          <h3 className="text-sm font-semibold text-[var(--danger-ink)]">
+            Delete account
+          </h3>
+          <p className="mt-1 text-sm text-[var(--muted)]">
+            Permanently delete your account, stored Canvas connection, and
+            preferences. This cannot be undone.
+          </p>
+        </div>
+        {!open && (
+          <button
+            type="button"
+            onClick={() => setOpen(true)}
+            className="cb-btn-danger shrink-0"
+          >
+            Delete account
+          </button>
+        )}
+      </div>
+
+      {open && (
+        <div className="mt-4">
+          <p className="text-sm text-[var(--muted)]">
+            Type <span className="font-semibold text-[var(--ink)]">DELETE</span>{" "}
+            to confirm. This immediately removes your account and all data we
+            store for you.
+          </p>
+
+          <label className="mt-4 block text-sm font-medium">
+            Confirmation
+            <input
+              type="text"
+              value={confirmText}
+              onChange={(e) => setConfirmText(e.target.value)}
+              className="cb-input mt-1.5"
+              placeholder="DELETE"
+              autoComplete="off"
+            />
+          </label>
+
+          {error && <Alert className="mt-4">{error}</Alert>}
+
+          <div className="cb-settings-actions mt-4">
+            <button
+              type="button"
+              onClick={handleDelete}
+              disabled={submitting || confirmText !== "DELETE"}
+              className="cb-btn-danger"
+            >
+              {submitting ? "Deleting…" : "Permanently delete account"}
+            </button>
+            <button
+              type="button"
+              onClick={closeForm}
+              disabled={submitting}
+              className="cb-btn-secondary"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -78,11 +78,29 @@ export default function AppShell({
       >
         {children}
       </main>
-      <footer className="mx-auto max-w-6xl border-t border-[var(--hairline)] px-4 py-8 text-center text-sm text-[var(--muted-ink)] sm:px-6">
-        CanvasBuddy uses your student Canvas account — not an administrator
-        login.
+      <footer className="mx-auto max-w-6xl border-t border-[var(--hairline)] px-4 py-8 text-sm text-[var(--muted-ink)] sm:px-6">
+        <div className="flex flex-col items-center justify-between gap-3 sm:flex-row">
+          <span className="text-center sm:text-left">
+            CanvasBuddy uses your student Canvas account — not an administrator
+            login.
+          </span>
+          <LegalFooterLinks />
+        </div>
       </footer>
     </div>
+  );
+}
+
+function LegalFooterLinks() {
+  return (
+    <span className="flex gap-4">
+      <Link href="/privacy" className="cb-link">
+        Privacy
+      </Link>
+      <Link href="/terms" className="cb-link">
+        Terms
+      </Link>
+    </span>
   );
 }
 
@@ -114,8 +132,13 @@ export function AppShellCentered({
           {children}
         </main>
       </div>
-      <footer className="mx-auto max-w-6xl border-t border-[var(--hairline)] px-4 py-8 text-center text-sm text-[var(--muted-ink)] sm:px-6">
-        Built for students — grades, deadlines, and study help in one place.
+      <footer className="mx-auto max-w-6xl border-t border-[var(--hairline)] px-4 py-8 text-sm text-[var(--muted-ink)] sm:px-6">
+        <div className="flex flex-col items-center justify-between gap-3 sm:flex-row">
+          <span className="text-center sm:text-left">
+            Built for students — grades, deadlines, and study help in one place.
+          </span>
+          <LegalFooterLinks />
+        </div>
       </footer>
     </div>
   );
